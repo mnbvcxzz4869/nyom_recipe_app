@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart'; // 1. Import the SVG package
+import 'package:go_router/go_router.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
 
@@ -74,7 +75,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 text: 'Sign In',
                 type: CustomButtonType.primary,
                 onPressed: () {
-                  // Execute manual login authentication
+                  // Bypasses the database to let you instantly explore your dashboard layout!
+                  context.go('/home');
                 },
               ),
               // Visual Separator Divider
@@ -130,7 +132,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     },
                     child: TextButton(
                       onPressed: () {
-                        // Navigate to password recovery
+                        context.push('/register');
                       },
                       style: TextButton.styleFrom(
                         foregroundColor: theme.colorScheme.primary,

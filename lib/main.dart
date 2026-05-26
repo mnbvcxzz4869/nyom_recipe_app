@@ -1,28 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/theme/app_theme.dart';
-import 'features/auth/screens/login_screen.dart';
+import 'core/router/app_router.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-
-  runApp(const ProviderScope(child: RecipeAppTest()));
+  runApp(const ProviderScope(child: NyomApp()));
 }
 
-class RecipeAppTest extends StatelessWidget {
-  const RecipeAppTest({super.key});
+class NyomApp extends StatelessWidget {
+  const NyomApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    // Crucial swap to .router initialization format
+    return MaterialApp.router(
       title: 'Nyom',
       debugShowCheckedModeBanner: false,
-
-      // Injecting your updated light theme with Fraunces & Commissioner fonts
       theme: AppTheme.lightTheme,
-
-      // Directly mounting the login page for standalone testing
-      home: const LoginScreen(),
+      routerConfig: appRouter, // Injects your clean GoRouter mapping profile
     );
   }
 }

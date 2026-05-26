@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
 
@@ -104,7 +105,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 text: 'Register',
                 type: CustomButtonType.primary,
                 onPressed: () {
-                  // Execute manual registration
+                  context.go('/home');
                 },
               ),
               const SizedBox(height: 4),
@@ -159,7 +160,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   // Note: Removed the extra GestureDetector since TextButton handles taps natively!
                   TextButton(
                     onPressed: () {
-                      // Navigate back to LoginScreen
+                      context
+                          .pop(); // Drags them back down smoothly to your LoginScreen canvas
                     },
                     style: TextButton.styleFrom(
                       foregroundColor: theme.colorScheme.primary,
