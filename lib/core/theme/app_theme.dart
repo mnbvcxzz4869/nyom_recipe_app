@@ -29,8 +29,8 @@ class AppTheme {
       textTheme: TextTheme(
         headlineLarge: GoogleFonts.fraunces(
           color: headingGreen,
-          fontWeight: FontWeight.bold,
-          fontSize: 32,
+          fontWeight: FontWeight.w400,
+          fontSize: 28,
         ),
         headlineMedium: GoogleFonts.fraunces(
           color: headingGreen,
