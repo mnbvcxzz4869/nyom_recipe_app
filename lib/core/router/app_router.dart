@@ -4,6 +4,7 @@ import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/register_screen.dart';
 import '../../shared/widgets/app_bottom_nav.dart';
 import '../../features/recipes/screens/recipes_screen.dart';
+import '../../features/planner/screens/weekly_planner_screen.dart';
 
 // Temporary lightweight placeholder layouts to ensure initial compilation succeeds
 class PlaceholderScreen extends StatelessWidget {
@@ -99,8 +100,7 @@ final appRouter = GoRouter(
           routes: [
             GoRoute(
               path: '/planner',
-              builder: (context, state) =>
-                  const PlaceholderScreen(title: '📅 Weekly Cooking Planner'),
+              builder: (context, state) => const WeeklyPlannerScreen(),
             ),
           ],
         ),
