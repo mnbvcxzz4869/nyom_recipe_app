@@ -174,63 +174,87 @@ class RecipeCard extends StatelessWidget {
     );
   }
 
-  // ==========================================
-  // TYPE 2: PLANNER SIDE-BY-SIDE COMPACT ROW
-  // ==========================================
+  // =======================================================
+  // TYPE 2: PLANNER SIDE-BY-SIDE COMPACT DESIGN (calendar.png)
+  // =======================================================
   Widget _buildMealPlannerRow(BuildContext context, RecipeDisplayModel data) {
     return Material(
-      elevation: 2,
       color: AppTheme.cardWhite,
-      borderRadius: BorderRadius.circular(16),
+      elevation: 2,
+      borderRadius: BorderRadius.circular(8),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Row(
-            children: [
-              Container(
+        child: Row(
+          children: [
+            // 1. ELEVATED LEFT THUMBNAIL IMAGE FRAME
+            Material(
+              elevation: 1, // Layered inside the card frame
+              borderRadius: BorderRadius.circular(8),
+              clipBehavior: Clip.antiAlias,
+              child: Container(
                 width: 64,
                 height: 64,
-                decoration: BoxDecoration(
-                  color: AppTheme.baseBackground,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.lunch_dining_rounded,
-                  color: AppTheme.greyAccent,
-                  size: 24,
+                color: AppTheme.baseBackground,
+                child: const Center(
+                  child: Icon(
+                    Icons.image_outlined,
+                    color: AppTheme.greyAccent,
+                    size: 22,
+                  ),
                 ),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      data.title,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+            ),
+
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 2),
+
+                  Text(
+                    data.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: AppTheme.headingGreen,
+                      fontSize: 16,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${data.category}  •  ${data.timeEstimate} min',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.bodyTextGreen.withValues(alpha: 0.6),
+                  ),
+                  const SizedBox(height: 6),
+
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.access_time_rounded,
+                        size: 16,
+                        color: AppTheme.greyAccent,
                       ),
-                    ),
-                  ],
-                ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${data.timeEstimate} Mins',
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodySmall?.copyWith(fontSize: 12),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                ],
               ),
-              const Icon(
-                Icons.chevron_right_rounded,
-                color: AppTheme.greyAccent,
-              ),
-            ],
-          ),
+            ),
+
+            // Clean trailing decoration indicator
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: AppTheme.greyAccent,
+              size: 20,
+            ),
+            SizedBox(width: 8),
+          ],
         ),
       ),
     );
@@ -254,7 +278,7 @@ class RecipeCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
-              flex: 8,
+              flex: 6,
               child: Material(
                 elevation: 2,
                 borderRadius: BorderRadius.circular(8),
@@ -334,7 +358,7 @@ class RecipeCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          '${data.timeEstimate} mins',
+                          '${data.timeEstimate} Mins',
                           style: Theme.of(
                             context,
                           ).textTheme.bodySmall?.copyWith(fontSize: 12),

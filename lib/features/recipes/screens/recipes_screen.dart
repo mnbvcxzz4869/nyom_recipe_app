@@ -118,7 +118,7 @@ class _RecipesScreenState extends State<RecipesScreen> {
                   crossAxisCount: 2,
                   mainAxisSpacing: 16.0,
                   crossAxisSpacing: 16.0,
-                  childAspectRatio: 0.55,
+                  childAspectRatio: 0.65,
                 ),
                 delegate: SliverChildBuilderDelegate((context, index) {
                   final recipe = _mockRecipes[index % _mockRecipes.length];
