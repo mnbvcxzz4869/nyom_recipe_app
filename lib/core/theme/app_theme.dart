@@ -45,7 +45,7 @@ class AppTheme {
         titleMedium: GoogleFonts.fraunces(
           color: headingGreen,
           fontWeight: FontWeight.w500,
-          fontSize: 18,
+          fontSize: 20,
         ),
         titleSmall: GoogleFonts.fraunces(
           color: headingGreen,

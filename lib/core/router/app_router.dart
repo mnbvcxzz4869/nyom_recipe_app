@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nyom_recipe_app/features/grocery/screens/grocery_list_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/register_screen.dart';
 import '../../shared/widgets/app_bottom_nav.dart';
@@ -110,8 +111,7 @@ final appRouter = GoRouter(
           routes: [
             GoRoute(
               path: '/grocery',
-              builder: (context, state) =>
-                  const PlaceholderScreen(title: '🛒 My Weekly Grocery List'),
+              builder: (context, state) => const GroceryListScreen(),
             ),
           ],
         ),
