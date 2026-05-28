@@ -3,14 +3,16 @@ import 'package:intl/intl.dart';
 import '../../core/theme/app_theme.dart';
 
 class WeeklyCalendarStrip extends StatefulWidget {
-  final DateTime baseDate; // User signup/anchor date from Supabase
-  final bool
-  showDayRow; // true for Planner (both sections), false for Grocery List (only week card)
+  final DateTime baseDate;
+  final bool showDayRow;
   final int activeWeekNumber;
   final ValueChanged<int> onWeekChanged;
-  final Function(DateTime selectedDate)?
-  onDateChanged; // Triggers when a weekday button is tapped
+  final Function(DateTime selectedDate)? onDateChanged;
 
+  // Parameter internal untuk membedakan mode render
+  final bool _isGroceryMode;
+
+  // 1. Constructor Standar (Dipakai di Weekly Planner - Tetap gaya Box Hijau Asli)
   const WeeklyCalendarStrip({
     super.key,
     required this.baseDate,
@@ -18,16 +20,25 @@ class WeeklyCalendarStrip extends StatefulWidget {
     required this.onWeekChanged,
     this.showDayRow = true,
     this.onDateChanged,
-  });
+  }) : _isGroceryMode = false;
+
+  // 2. Named Constructor Baru (Dipakai khusus di Grocery List Screen)
+  // Menghasilkan card putih langsung dengan Material elevation 2 tanpa bungkusan box hijau
+  const WeeklyCalendarStrip.grocery({
+    super.key,
+    required this.baseDate,
+    required this.activeWeekNumber,
+    required this.onWeekChanged,
+  }) : showDayRow = false,
+       onDateChanged = null,
+       _isGroceryMode = true;
 
   @override
   State<WeeklyCalendarStrip> createState() => _WeeklyCalendarStripState();
 }
 
 class _WeeklyCalendarStripState extends State<WeeklyCalendarStrip> {
-  int _activeDayIndex =
-      DateTime.now().weekday -
-      1; // Default focuses current system weekday index (0-6)
+  int _activeDayIndex = DateTime.now().weekday - 1;
   final List<String> _dayNames = [
     'Mon',
     'Tue',
@@ -38,7 +49,6 @@ class _WeeklyCalendarStripState extends State<WeeklyCalendarStrip> {
     'Sun',
   ];
 
-  /// Computes the 7 precise dates belonging to the active week number
   List<DateTime> _getDaysForWeek(int weekNum) {
     final DateTime baseMonday = widget.baseDate.subtract(
       Duration(days: widget.baseDate.weekday - 1),
@@ -49,16 +59,11 @@ class _WeeklyCalendarStripState extends State<WeeklyCalendarStrip> {
     return List.generate(7, (i) => targetMonday.add(Duration(days: i)));
   }
 
-  /// Formats the sub-header date range (e.g., "25 May - 31 May 2026")
   String _formatDateRange(List<DateTime> days) {
     if (days.isEmpty) return '';
     final DateTime start = days.first;
     final DateTime end = days.last;
-
-    final String startStr = DateFormat('d MMM').format(start);
-    final String endStr = DateFormat('d MMM yyyy').format(end);
-
-    return '$startStr - $endStr';
+    return '${DateFormat('d MMM').format(start)} - ${DateFormat('d MMM yyyy').format(end)}';
   }
 
   @override
@@ -68,6 +73,76 @@ class _WeeklyCalendarStripState extends State<WeeklyCalendarStrip> {
     );
     final String dateRangeLabel = _formatDateRange(calculatedDays);
 
+    // --- Private Widget: Konten utama Week Selector (< Week X > & Tanggal) ---
+    Widget buildWeekSelectorRow() {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          IconButton(
+            onPressed: widget.activeWeekNumber > 1
+                ? () {
+                    widget.onWeekChanged(widget.activeWeekNumber - 1);
+                    if (widget.onDateChanged != null) {
+                      final prevWeekDays = _getDaysForWeek(
+                        widget.activeWeekNumber - 1,
+                      );
+                      widget.onDateChanged!(prevWeekDays[_activeDayIndex]);
+                    }
+                  }
+                : null,
+            icon: const Icon(Icons.chevron_left_rounded, size: 28),
+            color: AppTheme.headingGreen,
+            disabledColor: AppTheme.greyAccent.withValues(alpha: 0.3),
+          ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Week ${widget.activeWeekNumber}',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              Text(
+                dateRangeLabel,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: AppTheme.greyAccent,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          IconButton(
+            onPressed: () {
+              widget.onWeekChanged(widget.activeWeekNumber + 1);
+              if (widget.onDateChanged != null) {
+                final nextWeekDays = _getDaysForWeek(
+                  widget.activeWeekNumber + 1,
+                );
+                widget.onDateChanged!(nextWeekDays[_activeDayIndex]);
+              }
+            },
+            icon: const Icon(Icons.chevron_right_rounded, size: 28),
+            color: AppTheme.headingGreen,
+          ),
+        ],
+      );
+    }
+
+    // --- REFLEKSI MODE RENDERING ---
+
+    // JIKA GROCERY MODE: Langsung kembalikan Card Putih bermaterial elevation 2 tanpa background hijau
+    if (widget._isGroceryMode) {
+      return Material(
+        color: AppTheme.cardWhite,
+        elevation: 2,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: buildWeekSelectorRow(),
+        ),
+      );
+    }
+
+    // JIKA PLANNER MODE (Default): Gunakan bungkusan Container besar Box Hijau asli kamu
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -83,68 +158,14 @@ class _WeeklyCalendarStripState extends State<WeeklyCalendarStrip> {
               borderRadius: BorderRadius.circular(8),
               color: AppTheme.cardWhite,
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  onPressed: widget.activeWeekNumber > 1
-                      ? () {
-                          widget.onWeekChanged(widget.activeWeekNumber - 1);
-                          if (widget.onDateChanged != null) {
-                            final prevWeekDays = _getDaysForWeek(
-                              widget.activeWeekNumber - 1,
-                            );
-                            widget.onDateChanged!(
-                              prevWeekDays[_activeDayIndex],
-                            );
-                          }
-                        }
-                      : null,
-                  icon: const Icon(Icons.chevron_left_rounded, size: 28),
-                  color: AppTheme.headingGreen,
-                  disabledColor: AppTheme.greyAccent.withValues(alpha: 0.3),
-                ),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Week ${widget.activeWeekNumber}',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    Text(
-                      dateRangeLabel,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: AppTheme.greyAccent,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                IconButton(
-                  onPressed: () {
-                    widget.onWeekChanged(widget.activeWeekNumber + 1);
-                    if (widget.onDateChanged != null) {
-                      final nextWeekDays = _getDaysForWeek(
-                        widget.activeWeekNumber + 1,
-                      );
-                      widget.onDateChanged!(nextWeekDays[_activeDayIndex]);
-                    }
-                  },
-                  icon: const Icon(Icons.chevron_right_rounded, size: 28),
-                  color: AppTheme.headingGreen,
-                ),
-              ],
-            ),
+            child: buildWeekSelectorRow(),
           ),
           if (widget.showDayRow) ...[
             const SizedBox(height: 16),
-            // LayoutBuilder allows us to calculate pixel widths dynamically at runtime
             LayoutBuilder(
               builder: (context, constraints) {
                 const double totalGaps = 6;
-                const double gapWidth = 6.0; // Clean layout separation gap
-
-                // Calculate identical card sizes down to exact sub-pixels
+                const double gapWidth = 6.0;
                 final double availableWidth =
                     constraints.maxWidth - (totalGaps * gapWidth);
                 final double itemWidth = availableWidth / 7;
@@ -152,13 +173,10 @@ class _WeeklyCalendarStripState extends State<WeeklyCalendarStrip> {
                 return Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: List.generate(13, (index) {
-                    // 7 items + 6 gaps = 13 total children
-                    // Render an explicit gap between day items
                     if (index.isOdd) {
                       return const SizedBox(width: gapWidth);
                     }
 
-                    // Convert row layout pointer back into your 0-6 array space
                     final int dayIndex = index ~/ 2;
                     final DateTime dayDate = calculatedDays[dayIndex];
                     final bool isDaySelected = dayIndex == _activeDayIndex;
@@ -174,8 +192,7 @@ class _WeeklyCalendarStripState extends State<WeeklyCalendarStrip> {
                       },
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 150),
-                        width:
-                            itemWidth, // Explicitly forces all 7 cards to be identical
+                        width: itemWidth,
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         decoration: BoxDecoration(
                           color: isDaySelected
