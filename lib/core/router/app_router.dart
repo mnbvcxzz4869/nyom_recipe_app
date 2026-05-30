@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nyom_recipe_app/features/grocery/screens/grocery_list_screen.dart';
+import 'package:nyom_recipe_app/features/home/screens/home_screen.dart';
+import 'package:nyom_recipe_app/features/recipes/models/recipe.dart';
+import 'package:nyom_recipe_app/features/recipes/screens/ai_parse_screen.dart';
+import 'package:nyom_recipe_app/features/recipes/screens/recipe_detail_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/register_screen.dart';
 import '../../shared/widgets/app_bottom_nav.dart';
@@ -65,8 +69,16 @@ final appRouter = GoRouter(
       path: '/ai-parse',
       parentNavigatorKey:
           _rootNavigatorKey, // Overlay modal sheet on top of everything
-      builder: (context, state) =>
-          const PlaceholderScreen(title: '✨ AI Recipe Parser Wizard'),
+      builder: (context, state) => const AiParseScreen(),
+    ),
+
+    GoRoute(
+      path: '/recipe-detail',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) {
+        final recipe = state.extra as Recipe;
+        return RecipeDetailScreen(recipe: recipe);
+      },
     ),
 
     // --- PERSISTENT 4-BRANCH BOTTOM NAVIGATION SHELL ---
@@ -80,8 +92,7 @@ final appRouter = GoRouter(
           routes: [
             GoRoute(
               path: '/home',
-              builder: (context, state) =>
-                  const PlaceholderScreen(title: '🍳 Home Dashboard'),
+              builder: (context, state) => const HomeScreen(),
             ),
           ],
         ),

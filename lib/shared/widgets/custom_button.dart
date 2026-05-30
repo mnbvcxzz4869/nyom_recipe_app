@@ -92,7 +92,7 @@ class CustomButton extends StatelessWidget {
         strokeWidth: 1,
         radius: const Radius.circular(
           8,
-        ), // Subtle rounded framing matches design
+        ), 
         dashPattern: const [6, 2],
       ),
       child: Material(
