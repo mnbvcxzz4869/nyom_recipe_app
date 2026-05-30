@@ -1,28 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:nyom_recipe_app/features/recipes/models/recipe.dart';
 import '../../core/theme/app_theme.dart';
 
 enum RecipeCardType { heroActive, mealPlannerRow, discoveryGrid }
 
-class RecipeDisplayModel {
-  final String title;
-  final String timeEstimate;
-  final String category;
-  final String? imageUrl;
-
-  const RecipeDisplayModel({
-    required this.title,
-    required this.timeEstimate,
-    required this.category,
-    this.imageUrl,
-  });
-}
-
 class RecipeCard extends StatelessWidget {
   final RecipeCardType type;
-  final RecipeDisplayModel? recipe;
+  final Recipe? recipe;
   final VoidCallback? onTap;
-
-  const RecipeCard({super.key, required this.type, this.recipe, this.onTap});
+  final String? slotLabel;
+  const RecipeCard({
+    super.key,
+    required this.type,
+    this.recipe,
+    this.onTap,
+    this.slotLabel,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -30,109 +23,123 @@ class RecipeCard extends StatelessWidget {
       return _buildHeroEmptyState(context);
     }
 
-    final data =
-        recipe ??
-        const RecipeDisplayModel(
-          title: 'Delicious Sample Meal',
-          timeEstimate: '25',
-          category: 'Healthy',
-        );
-
     switch (type) {
       case RecipeCardType.heroActive:
-        return _buildHeroActiveCard(context, data);
+        return _buildHeroActiveCard(context, recipe!);
       case RecipeCardType.mealPlannerRow:
-        return _buildMealPlannerRow(context, data);
+        return _buildMealPlannerRow(context, recipe!);
       case RecipeCardType.discoveryGrid:
-        return _buildDiscoveryGridCard(context, data);
+        return _buildDiscoveryGridCard(context, recipe!);
     }
   }
 
   // ==========================================
   // TYPE 1: TIME-AWARE HERO WORKSPACE VARIANTS
   // ==========================================
-  Widget _buildHeroActiveCard(BuildContext context, RecipeDisplayModel data) {
+  Widget _buildHeroActiveCard(BuildContext context, Recipe recipe) {
     return Material(
       elevation: 2,
       color: AppTheme.cardWhite,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(8),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.all(16),
+        borderRadius: BorderRadius.circular(8),
+        child: SizedBox(
+          height: 160,
           child: Row(
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'TODAY\'S BREAKFAST',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.greyAccent,
-                        letterSpacing: 1.0,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      data.title,
-                      style: Theme.of(
-                        context,
-                      ).textTheme.titleLarge?.copyWith(fontSize: 20),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.access_time_rounded,
-                          size: 14,
-                          color: AppTheme.greyAccent,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${data.timeEstimate} min',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        const SizedBox(width: 16),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppTheme.warmYellow.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            data.category,
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(
-                                  color: AppTheme.headingGreen,
-                                  fontWeight: FontWeight.bold,
-                                ),
+              Material(
+                elevation: 1, // Layered inside the card frame
+                borderRadius: BorderRadius.circular(8),
+                clipBehavior: Clip.antiAlias,
+                child: SizedBox(
+                  width: 160,
+                  height: 160,
+                  child: recipe.imageUrl != null
+                      ? Image.network(recipe.imageUrl!, fit: BoxFit.cover)
+                      : Container(
+                          color: AppTheme.baseBackground,
+                          child: const Icon(
+                            Icons.restaurant_rounded,
+                            color: AppTheme.greyAccent,
+                            size: 32,
                           ),
                         ),
-                      ],
-                    ),
-                  ],
                 ),
               ),
-              const SizedBox(width: 16),
-              Container(
-                width: 88,
-                height: 88,
-                decoration: BoxDecoration(
-                  color: AppTheme.baseBackground,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.restaurant_rounded,
-                  color: AppTheme.greyAccent,
-                  size: 32,
+              // Left: Recipe image
+
+              // Right: Text content
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 16,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      if (slotLabel != null) ...[
+                        Text(
+                          slotLabel!,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: AppTheme.greyAccent,
+                                fontSize: 12,
+                              ),
+                        ),
+                      ],
+                      const SizedBox(height: 4),
+
+                      // Recipe title
+                      Text(
+                        recipe.title,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontSize: 20,
+                          height: 1.2,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+
+                      // Duration + Cook Now button
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.access_time_rounded,
+                            size: 16,
+                            color: AppTheme.greyAccent,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${recipe.durationMinutes} Min',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                          const Spacer(),
+                          // Cook Now button
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.warmYellow,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              'Cook Now!',
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: AppTheme.headingGreen,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -177,7 +184,7 @@ class RecipeCard extends StatelessWidget {
   // =======================================================
   // TYPE 2: PLANNER SIDE-BY-SIDE COMPACT DESIGN (calendar.png)
   // =======================================================
-  Widget _buildMealPlannerRow(BuildContext context, RecipeDisplayModel data) {
+  Widget _buildMealPlannerRow(BuildContext context, Recipe recipe) {
     return Material(
       color: AppTheme.cardWhite,
       elevation: 2,
@@ -215,7 +222,7 @@ class RecipeCard extends StatelessWidget {
                   const SizedBox(height: 2),
 
                   Text(
-                    data.title,
+                    recipe.title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -235,11 +242,29 @@ class RecipeCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        '${data.timeEstimate} Mins',
+                        '${recipe.durationMinutes.toString()} Mins',
                         style: Theme.of(
                           context,
                         ).textTheme.bodySmall?.copyWith(fontSize: 12),
                       ),
+                      if (slotLabel != null) ...[
+                        Text(
+                          ' • ',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: AppTheme.greyAccent,
+                                fontSize: 12,
+                              ),
+                        ),
+                        Text(
+                          slotLabel!,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: AppTheme.greyAccent,
+                                fontSize: 12,
+                              ),
+                        ),
+                      ],
                     ],
                   ),
                   const SizedBox(height: 2),
@@ -263,10 +288,7 @@ class RecipeCard extends StatelessWidget {
   // =======================================================
   // TYPE 3: PORTRAIT DISCOVERY GRID CARD (ELEVATED PICTURE)
   // =======================================================
-  Widget _buildDiscoveryGridCard(
-    BuildContext context,
-    RecipeDisplayModel data,
-  ) {
+  Widget _buildDiscoveryGridCard(BuildContext context, Recipe recipe) {
     return Material(
       color: AppTheme.cardWhite,
       elevation: 2,
@@ -312,7 +334,7 @@ class RecipeCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          data.category,
+                          recipe.category.label,
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(
                                 color: AppTheme.headingGreen,
@@ -339,7 +361,7 @@ class RecipeCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      data.title,
+                      recipe.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -358,7 +380,7 @@ class RecipeCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          '${data.timeEstimate} Mins',
+                          '${recipe.durationMinutes.toString()} Mins',
                           style: Theme.of(
                             context,
                           ).textTheme.bodySmall?.copyWith(fontSize: 12),

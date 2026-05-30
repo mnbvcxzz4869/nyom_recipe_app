@@ -2,17 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../core/theme/app_theme.dart';
 
+enum CalendarStripVariant { planner, grocery, home }
+
 class WeeklyCalendarStrip extends StatefulWidget {
   final DateTime baseDate;
   final bool showDayRow;
   final int activeWeekNumber;
   final ValueChanged<int> onWeekChanged;
   final Function(DateTime selectedDate)? onDateChanged;
+  final CalendarStripVariant variant;
 
-  // Parameter internal untuk membedakan mode render
-  final bool _isGroceryMode;
-
-  // 1. Constructor Standar (Dipakai di Weekly Planner - Tetap gaya Box Hijau Asli)
   const WeeklyCalendarStrip({
     super.key,
     required this.baseDate,
@@ -20,10 +19,9 @@ class WeeklyCalendarStrip extends StatefulWidget {
     required this.onWeekChanged,
     this.showDayRow = true,
     this.onDateChanged,
-  }) : _isGroceryMode = false;
+    this.variant = CalendarStripVariant.planner,
+  });
 
-  // 2. Named Constructor Baru (Dipakai khusus di Grocery List Screen)
-  // Menghasilkan card putih langsung dengan Material elevation 2 tanpa bungkusan box hijau
   const WeeklyCalendarStrip.grocery({
     super.key,
     required this.baseDate,
@@ -31,7 +29,16 @@ class WeeklyCalendarStrip extends StatefulWidget {
     required this.onWeekChanged,
   }) : showDayRow = false,
        onDateChanged = null,
-       _isGroceryMode = true;
+       variant = CalendarStripVariant.grocery;
+
+  const WeeklyCalendarStrip.home({
+    super.key,
+    required this.baseDate,
+    required this.activeWeekNumber,
+    required this.onWeekChanged,
+    this.showDayRow = true,
+    this.onDateChanged,
+  }) : variant = CalendarStripVariant.home;
 
   @override
   State<WeeklyCalendarStrip> createState() => _WeeklyCalendarStripState();
@@ -39,6 +46,7 @@ class WeeklyCalendarStrip extends StatefulWidget {
 
 class _WeeklyCalendarStripState extends State<WeeklyCalendarStrip> {
   int _activeDayIndex = DateTime.now().weekday - 1;
+
   final List<String> _dayNames = [
     'Mon',
     'Tue',
@@ -61,9 +69,123 @@ class _WeeklyCalendarStripState extends State<WeeklyCalendarStrip> {
 
   String _formatDateRange(List<DateTime> days) {
     if (days.isEmpty) return '';
-    final DateTime start = days.first;
-    final DateTime end = days.last;
-    return '${DateFormat('d MMM').format(start)} - ${DateFormat('d MMM yyyy').format(end)}';
+    return '${DateFormat('d MMM').format(days.first)} - ${DateFormat('d MMM yyyy').format(days.last)}';
+  }
+
+  Widget _buildWeekSelectorRow(List<DateTime> calculatedDays) {
+    final String dateRangeLabel = _formatDateRange(calculatedDays);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        IconButton(
+          onPressed: widget.activeWeekNumber > 1
+              ? () {
+                  widget.onWeekChanged(widget.activeWeekNumber - 1);
+                  widget.onDateChanged?.call(
+                    _getDaysForWeek(
+                      widget.activeWeekNumber - 1,
+                    )[_activeDayIndex],
+                  );
+                }
+              : null,
+          icon: const Icon(Icons.chevron_left_rounded, size: 28),
+          color: AppTheme.headingGreen,
+          disabledColor: AppTheme.greyAccent.withValues(alpha: 0.3),
+        ),
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Week ${widget.activeWeekNumber}',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            Text(
+              dateRangeLabel,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: AppTheme.greyAccent,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        IconButton(
+          onPressed: () {
+            widget.onWeekChanged(widget.activeWeekNumber + 1);
+            widget.onDateChanged?.call(
+              _getDaysForWeek(widget.activeWeekNumber + 1)[_activeDayIndex],
+            );
+          },
+          icon: const Icon(Icons.chevron_right_rounded, size: 28),
+          color: AppTheme.headingGreen,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDayRow(List<DateTime> calculatedDays) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const double gapWidth = 6.0;
+        const int gapCount = 6;
+        final double itemWidth =
+            (constraints.maxWidth - (gapCount * gapWidth)) / 7;
+
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: List.generate(13, (index) {
+            if (index.isOdd) return const SizedBox(width: gapWidth);
+
+            final int dayIndex = index ~/ 2;
+            final DateTime dayDate = calculatedDays[dayIndex];
+            final bool isSelected = dayIndex == _activeDayIndex;
+
+            return GestureDetector(
+              onTap: () {
+                setState(() => _activeDayIndex = dayIndex);
+                widget.onDateChanged?.call(dayDate);
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                width: itemWidth,
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  color: isSelected ? AppTheme.warmYellow : AppTheme.cardWhite,
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(
+                    color: AppTheme.crossedOutGreen.withValues(alpha: 0.1),
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      _dayNames[dayIndex],
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: isSelected
+                            ? AppTheme.headingGreen
+                            : AppTheme.greyAccent,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${dayDate.day}',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: isSelected
+                            ? AppTheme.headingGreen
+                            : AppTheme.bodyTextGreen,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+        );
+      },
+    );
   }
 
   @override
@@ -71,171 +193,47 @@ class _WeeklyCalendarStripState extends State<WeeklyCalendarStrip> {
     final List<DateTime> calculatedDays = _getDaysForWeek(
       widget.activeWeekNumber,
     );
-    final String dateRangeLabel = _formatDateRange(calculatedDays);
 
-    // --- Private Widget: Konten utama Week Selector (< Week X > & Tanggal) ---
-    Widget buildWeekSelectorRow() {
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          IconButton(
-            onPressed: widget.activeWeekNumber > 1
-                ? () {
-                    widget.onWeekChanged(widget.activeWeekNumber - 1);
-                    if (widget.onDateChanged != null) {
-                      final prevWeekDays = _getDaysForWeek(
-                        widget.activeWeekNumber - 1,
-                      );
-                      widget.onDateChanged!(prevWeekDays[_activeDayIndex]);
-                    }
-                  }
-                : null,
-            icon: const Icon(Icons.chevron_left_rounded, size: 28),
-            color: AppTheme.headingGreen,
-            disabledColor: AppTheme.greyAccent.withValues(alpha: 0.3),
+    switch (widget.variant) {
+      case CalendarStripVariant.home:
+        return _buildDayRow(calculatedDays);
+
+      case CalendarStripVariant.grocery:
+        return Material(
+          color: AppTheme.cardWhite,
+          elevation: 2,
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: _buildWeekSelectorRow(calculatedDays),
           ),
-          Column(
+        );
+
+      case CalendarStripVariant.planner:
+        return Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppTheme.headingGreen,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                'Week ${widget.activeWeekNumber}',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              Text(
-                dateRangeLabel,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: AppTheme.greyAccent,
-                  fontWeight: FontWeight.w600,
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                decoration: BoxDecoration(
+                  color: AppTheme.cardWhite,
+                  borderRadius: BorderRadius.circular(8),
                 ),
+                child: _buildWeekSelectorRow(calculatedDays),
               ),
+              if (widget.showDayRow) ...[
+                const SizedBox(height: 16),
+                _buildDayRow(calculatedDays),
+              ],
             ],
           ),
-          IconButton(
-            onPressed: () {
-              widget.onWeekChanged(widget.activeWeekNumber + 1);
-              if (widget.onDateChanged != null) {
-                final nextWeekDays = _getDaysForWeek(
-                  widget.activeWeekNumber + 1,
-                );
-                widget.onDateChanged!(nextWeekDays[_activeDayIndex]);
-              }
-            },
-            icon: const Icon(Icons.chevron_right_rounded, size: 28),
-            color: AppTheme.headingGreen,
-          ),
-        ],
-      );
+        );
     }
-
-    // --- REFLEKSI MODE RENDERING ---
-
-    // JIKA GROCERY MODE: Langsung kembalikan Card Putih bermaterial elevation 2 tanpa background hijau
-    if (widget._isGroceryMode) {
-      return Material(
-        color: AppTheme.cardWhite,
-        elevation: 2,
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
-          child: buildWeekSelectorRow(),
-        ),
-      );
-    }
-
-    // JIKA PLANNER MODE (Default): Gunakan bungkusan Container besar Box Hijau asli kamu
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppTheme.headingGreen,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              color: AppTheme.cardWhite,
-            ),
-            child: buildWeekSelectorRow(),
-          ),
-          if (widget.showDayRow) ...[
-            const SizedBox(height: 16),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                const double totalGaps = 6;
-                const double gapWidth = 6.0;
-                final double availableWidth =
-                    constraints.maxWidth - (totalGaps * gapWidth);
-                final double itemWidth = availableWidth / 7;
-
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: List.generate(13, (index) {
-                    if (index.isOdd) {
-                      return const SizedBox(width: gapWidth);
-                    }
-
-                    final int dayIndex = index ~/ 2;
-                    final DateTime dayDate = calculatedDays[dayIndex];
-                    final bool isDaySelected = dayIndex == _activeDayIndex;
-
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _activeDayIndex = dayIndex;
-                        });
-                        if (widget.onDateChanged != null) {
-                          widget.onDateChanged!(dayDate);
-                        }
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 150),
-                        width: itemWidth,
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        decoration: BoxDecoration(
-                          color: isDaySelected
-                              ? AppTheme.warmYellow
-                              : AppTheme.cardWhite,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              _dayNames[dayIndex],
-                              style: Theme.of(context).textTheme.labelLarge
-                                  ?.copyWith(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
-                                    color: isDaySelected
-                                        ? AppTheme.headingGreen
-                                        : AppTheme.greyAccent,
-                                  ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${dayDate.day}',
-                              style: Theme.of(context).textTheme.titleMedium
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: isDaySelected
-                                        ? AppTheme.headingGreen
-                                        : AppTheme.bodyTextGreen,
-                                  ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }),
-                );
-              },
-            ),
-          ],
-        ],
-      ),
-    );
   }
 }

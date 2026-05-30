@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:nyom_recipe_app/core/mock/mock_data.dart';
+import 'package:nyom_recipe_app/features/recipes/models/recipe.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/recipe_card.dart';
 import '../../../shared/widgets/recipe_search_bar.dart';
@@ -18,7 +21,7 @@ class _RecipesScreenState extends State<RecipesScreen> {
   final List<String> _categories = [
     'All',
     'Rice',
-    'Noodles',
+    'Noodle',
     'Meat',
     'Seafood',
     'Vegetables',
@@ -26,28 +29,20 @@ class _RecipesScreenState extends State<RecipesScreen> {
     'Desserts',
   ];
 
-  final List<RecipeDisplayModel> _mockRecipes = [
-    const RecipeDisplayModel(
-      title: 'Fluffy Strawberry Pancakes',
-      timeEstimate: '15',
-      category: 'Breakfast',
-    ),
-    const RecipeDisplayModel(
-      title: 'Creamy Garlic Mushroom Pasta',
-      timeEstimate: '25',
-      category: 'Lunch',
-    ),
-    const RecipeDisplayModel(
-      title: 'Grilled Salmon with Avocado',
-      timeEstimate: '30',
-      category: 'Dinner',
-    ),
-    const RecipeDisplayModel(
-      title: 'Fresh Green Detox Salad',
-      timeEstimate: '10',
-      category: 'Healthy',
-    ),
-  ];
+  final List<Recipe> _mockRecipes = mockRecipes;
+
+  List<Recipe> get _filteredRecipes {
+    return _mockRecipes.where((recipe) {
+      final matchesCategory = _selectedCategory == 'All' ||
+          recipe.category.name.toLowerCase() ==
+              _selectedCategory.toLowerCase();
+      final matchesSearch = _searchController.text.isEmpty ||
+          recipe.title
+              .toLowerCase()
+              .contains(_searchController.text.toLowerCase());
+      return matchesCategory && matchesSearch;
+    }).toList();
+  }
 
   @override
   void dispose() {
@@ -62,15 +57,11 @@ class _RecipesScreenState extends State<RecipesScreen> {
       body: SafeArea(
         bottom: false,
         child: CustomScrollView(
-          clipBehavior: Clip
-              .none, // FIX: Stops CustomScrollView from cutting off bleeding child box-shadows!
+          clipBehavior: Clip.none,
           slivers: [
-            // --- SEARCH CONTROL ELEMENT HEADER BLOCK ---
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                ), // Adds side padding strictly inside the row item
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -80,7 +71,10 @@ class _RecipesScreenState extends State<RecipesScreen> {
                       style: Theme.of(context).textTheme.headlineLarge,
                     ),
                     const SizedBox(height: 16.0),
-                    RecipeSearchBar(controller: _searchController),
+                    RecipeSearchBar(
+                      controller: _searchController,
+                      onChanged: (_) => setState(() {}),
+                    ),
                   ],
                 ),
               ),
@@ -88,7 +82,6 @@ class _RecipesScreenState extends State<RecipesScreen> {
 
             const SliverToBoxAdapter(child: SizedBox(height: 16.0)),
 
-            // --- HORIZONTAL FILTER SELECTION SCROLL ROW MODULE ---
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -104,14 +97,12 @@ class _RecipesScreenState extends State<RecipesScreen> {
               ),
             ),
 
-            // --- NATIVE, PERFECTLY UNIFORM RECIPE GRID VIEW ---
             SliverPadding(
               padding: const EdgeInsets.only(
-                left:
-                    16.0, // Move horizontal padding here so side cards have shadow buffer room
+                left: 16.0,
                 right: 16.0,
                 top: 16.0,
-                bottom: 110.0, // Clearance for your floating bottom bar
+                bottom: 110.0,
               ),
               sliver: SliverGrid(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -120,18 +111,19 @@ class _RecipesScreenState extends State<RecipesScreen> {
                   crossAxisSpacing: 16.0,
                   childAspectRatio: 0.65,
                 ),
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  final recipe = _mockRecipes[index % _mockRecipes.length];
-                  return RecipeCard(
-                    type: RecipeCardType.discoveryGrid,
-                    recipe: recipe,
-                    onTap: () {
-                      debugPrint(
-                        'Tapped recipe context profile: ${recipe.title}',
-                      );
-                    },
-                  );
-                }, childCount: 8),
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final recipe = _filteredRecipes[index];
+                    return RecipeCard(
+                      type: RecipeCardType.discoveryGrid,
+                      recipe: recipe,
+                      onTap: () {
+                        context.push('/recipe-detail', extra: recipe);
+                      },
+                    );
+                  },
+                  childCount: _filteredRecipes.length,
+                ),
               ),
             ),
           ],

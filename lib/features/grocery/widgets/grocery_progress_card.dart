@@ -18,7 +18,7 @@ class GroceryProgressCard extends StatelessWidget {
     return Material(
       color: AppTheme.cardWhite,
       elevation: 2,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(8),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -28,7 +28,7 @@ class GroceryProgressCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '$boughtItems/$totalItems of $totalItems Items done',
+                  '$boughtItems of $totalItems Items done',
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 Text(
@@ -37,12 +37,12 @@ class GroceryProgressCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 4),
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: LinearProgressIndicator(
                 value: percentage,
-                minHeight: 8,
+                minHeight: 6,
                 backgroundColor: AppTheme.baseBackground,
                 valueColor: const AlwaysStoppedAnimation<Color>(
                   AppTheme.greyAccent,

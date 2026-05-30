@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:nyom_recipe_app/core/mock/mock_data.dart';
+import 'package:nyom_recipe_app/features/planner/models/meal_plan.dart';
+import 'package:nyom_recipe_app/features/recipes/models/recipe.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/recipe_card.dart';
 import '../../../shared/widgets/custom_button.dart';
@@ -20,54 +24,25 @@ class _WeeklyPlannerScreenState extends State<WeeklyPlannerScreen> {
   int _selectedWeekNumber = 1;
   DateTime _activeSelectedDate = DateTime.now();
 
-  // A mock database matching meals to specific date strings ('yyyy-MM-dd')
-  // This simulates exactly what happens when the user has already added menu items
-  late Map<String, Map<String, RecipeDisplayModel?>> _plannedMealsDatabase;
+  String _dateKey(DateTime d) => DateFormat('yyyy-MM-dd').format(d);
+
+  late Map<String, MealPlan> _mealPlans;
 
   @override
   void initState() {
     super.initState();
-
-    // Generate static date string keys for today and tomorrow to display pre-saved meals
-    final String todayKey = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    final String tomorrowKey = DateFormat(
-      'yyyy-MM-dd',
-    ).format(DateTime.now().add(const Duration(days: 1)));
-
-    _plannedMealsDatabase = {
-      todayKey: {
-        'Breakfast': const RecipeDisplayModel(
-          title: 'Fluffy Strawberry Pancakes',
-          timeEstimate: '15',
-          category: 'Breakfast',
-        ),
-        'Lunch': null, // Empty slot: will display the Dashed CustomButton
-        'Dinner': const RecipeDisplayModel(
-          title: 'Grilled Salmon with Avocado',
-          timeEstimate: '30',
-          category: 'Dinner',
-        ),
-      },
-      tomorrowKey: {
-        'Breakfast': null,
-        'Lunch': const RecipeDisplayModel(
-          title: 'Creamy Garlic Mushroom Pasta',
-          timeEstimate: '25',
-          category: 'Lunch',
-        ),
-        'Dinner': null,
-      },
+    _mealPlans = {
+      _dateKey(DateTime.now()): mockMealPlanForDate(DateTime.now()),
+      _dateKey(DateTime.now().add(const Duration(days: 1))):
+          mockMealPlanForDate(DateTime.now().add(const Duration(days: 1))),
     };
   }
 
   @override
   Widget build(BuildContext context) {
-    // Format current selected date to look up dynamic day records from our database map
-    final String activeDateKey = DateFormat(
-      'yyyy-MM-dd',
-    ).format(_activeSelectedDate);
-    final Map<String, RecipeDisplayModel?> activeDayMeals =
-        _plannedMealsDatabase[activeDateKey] ?? {};
+    final MealPlan activePlan =
+        _mealPlans[_dateKey(_activeSelectedDate)] ??
+        MealPlan(dateKey: _dateKey(_activeSelectedDate));
 
     return Scaffold(
       backgroundColor: AppTheme.baseBackground,
@@ -106,35 +81,28 @@ class _WeeklyPlannerScreenState extends State<WeeklyPlannerScreen> {
                     setState(() {
                       _activeSelectedDate = newDate;
                     });
-                    debugPrint('Date focused: $_activeSelectedDate');
                   },
                 ),
               ),
             ),
 
             SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              padding: const EdgeInsets.only(
+                left: 16.0,
+                right: 16.0,
+                bottom: 110.0,
+              ),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   _buildMealSectionSlot(
                     context,
                     'Breakfast',
-                    activeDayMeals['Breakfast'],
+                    activePlan.breakfast,
                   ),
-                  SizedBox(height: 8),
-
-                  _buildMealSectionSlot(
-                    context,
-                    'Lunch',
-                    activeDayMeals['Lunch'],
-                  ),
-                  SizedBox(height: 8),
-
-                  _buildMealSectionSlot(
-                    context,
-                    'Dinner',
-                    activeDayMeals['Dinner'],
-                  ),
+                  const SizedBox(height: 8),
+                  _buildMealSectionSlot(context, 'Lunch', activePlan.lunch),
+                  const SizedBox(height: 8),
+                  _buildMealSectionSlot(context, 'Dinner', activePlan.dinner),
                 ]),
               ),
             ),
@@ -147,14 +115,13 @@ class _WeeklyPlannerScreenState extends State<WeeklyPlannerScreen> {
   Widget _buildMealSectionSlot(
     BuildContext context,
     String sectionLabel,
-    RecipeDisplayModel? plannedRecipe,
+    List<Recipe> recipes,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         Row(
-          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(sectionLabel, style: Theme.of(context).textTheme.titleMedium),
@@ -167,28 +134,35 @@ class _WeeklyPlannerScreenState extends State<WeeklyPlannerScreen> {
             ),
           ],
         ),
-        SizedBox(height: 4),
-        plannedRecipe != null
-            ? RecipeCard(
-                type: RecipeCardType.mealPlannerRow, // Type 2 Card layout
-                recipe: plannedRecipe,
-                onTap: () {
-                  debugPrint(
-                    'Navigate to Detailed View for: ${plannedRecipe.title}',
-                  );
-                },
-              )
-            : CustomButton(
-                text: 'No $sectionLabel planned  — tap to add',
-                type: CustomButtonType.dashed,
-                onPressed: () => _openRecipePicker(sectionLabel),
-              ),
+        const SizedBox(height: 4),
+        if (recipes.isEmpty)
+          CustomButton(
+            text: 'No $sectionLabel planned — tap to add',
+            type: CustomButtonType.dashed,
+            onPressed: () => _openRecipePicker(sectionLabel),
+          )
+        else
+          Column(
+            children: recipes
+                .map(
+                  (recipe) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: RecipeCard(
+                      type: RecipeCardType.mealPlannerRow,
+                      recipe: recipe,
+                      onTap: () {
+                        context.push('/recipe-detail', extra: recipe);
+                      },
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
       ],
     );
   }
 
   void _openRecipePicker(String sectionLabel) {
     debugPrint('Open recipe picking dialog sheet stream for: $sectionLabel');
-    // Next, we can plug in the state handler to update _plannedMealsDatabase on selection!
   }
 }

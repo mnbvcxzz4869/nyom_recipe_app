@@ -109,8 +109,8 @@ class _LoginScreenState extends State<LoginScreen> {
               CustomButton(
                 text: 'Continue with Google',
                 type: CustomButtonType.secondary,
-                icon: Image.network(
-                  'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Google_Favicon_2025.svg/250px-Google_Favicon_2025.svg.png?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=thumbnail',
+                icon: Image.asset(
+                  'assets/google-logo.webp',
                   height: 22,
                   width: 22,
                   fit: BoxFit.contain,

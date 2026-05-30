@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:nyom_recipe_app/features/grocery/models/grocery_item.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/grocery_checkbox_tile.dart';
 
 enum IngredientListType {
   groceryCheck, // Dengan Checkbox (Halaman Grocery List)
-  homePreview, // Polos dengan Kuantitas (Halaman Home Dashboard)
   recipeView, // Dengan Bullet/Titik bulat biasa (Halaman Detail Resep)
   editableAdd, // Dengan tombol hapus/delete icon (Halaman Tambah Resep)
 }
 
 class GroceryCategoryCard extends StatelessWidget {
   final String categoryHeading;
-  final List<Map<String, dynamic>> items;
+  final List<GroceryItem> items;
   final IngredientListType type;
   final Function(int index, bool newValue)? onItemToggle;
   final Function(int index)? onDeleteItem;
@@ -48,7 +48,7 @@ class GroceryCategoryCard extends StatelessWidget {
           Material(
             color: AppTheme.cardWhite,
             elevation: 2,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(8),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -62,16 +62,13 @@ class GroceryCategoryCard extends StatelessWidget {
                       _buildDynamicIngredientRow(
                         context,
                         index: index,
-                        name: item['name'] ?? '',
-                        qty: item['qty'] ?? '',
-                        bought: item['bought'] ?? false,
+                        name: item.ingredient.name,
+                        qty: item.ingredient.quantity,
+                        bought: item.isBought,
                       ),
-                      // Hanya merender divider jika bukan merupakan item terakhir di dalam list
                       if (index < items.length - 1)
                         Divider(
-                          color: AppTheme.crossedOutGreen.withValues(
-                            alpha: 0.15,
-                          ),
+                          color: AppTheme.crossedOutGreen,
                           thickness: 1,
                           height: 12, // Margin vertikal pembatas yang bersih
                         ),
@@ -102,32 +99,6 @@ class GroceryCategoryCard extends StatelessWidget {
           onChanged: (val) {
             if (onItemToggle != null) onItemToggle!(index, val ?? false);
           },
-        );
-
-      case IngredientListType.homePreview:
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 4.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                name,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: bought
-                      ? AppTheme.crossedOutGreen
-                      : AppTheme.bodyTextGreen,
-                  decoration: bought ? TextDecoration.lineThrough : null,
-                ),
-              ),
-              Text(
-                qty,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppTheme.greyAccent,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
         );
 
       case IngredientListType.recipeView:
