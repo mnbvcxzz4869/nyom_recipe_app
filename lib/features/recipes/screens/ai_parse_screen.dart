@@ -664,7 +664,7 @@ class _AiParseScreenState extends State<AiParseScreen>
   // ── Dashed "Add" button at the bottom of a card ───────────────────────────
   Widget _buildDashedAddButton(String label, VoidCallback onTap) {
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.only(left: 16.0, right: 16, bottom: 16, top: 0),
       child: DottedBorder(
         options: RoundedRectDottedBorderOptions(
           color: AppTheme.crossedOutGreen,
