@@ -104,18 +104,30 @@ class _AiParseScreenState extends State<AiParseScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.baseBackground,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: Text(
-          'Add Recipe',
-          style: Theme.of(context).textTheme.headlineLarge,
-        ),
-      ),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            Padding(
+              padding: const EdgeInsets.only(
+                top: 16,
+                bottom: 4,
+                left: 8,
+                right: 8,
+              ),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  Text(
+                    'Add Recipe',
+                    style: Theme.of(context).textTheme.headlineLarge,
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 8),
             // ── Tab Bar ──────────────────────────────────────────────────
             Padding(

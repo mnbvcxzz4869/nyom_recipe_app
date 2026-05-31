@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nyom_recipe_app/features/grocery/screens/grocery_list_screen.dart';
 import 'package:nyom_recipe_app/features/home/screens/home_screen.dart';
+import 'package:nyom_recipe_app/core/mock/mock_data.dart';
 import 'package:nyom_recipe_app/features/recipes/models/recipe.dart';
 import 'package:nyom_recipe_app/features/recipes/screens/ai_parse_screen.dart';
 import 'package:nyom_recipe_app/features/recipes/screens/recipe_detail_screen.dart';
@@ -73,10 +74,17 @@ final appRouter = GoRouter(
     ),
 
     GoRoute(
-      path: '/recipe-detail',
+      path: '/recipe-detail/:id',
       parentNavigatorKey: _rootNavigatorKey,
+      redirect: (context, state) {
+        final id = state.pathParameters['id'];
+        final exists =
+            id != null && mockRecipes.any((recipe) => recipe.id == id);
+        return exists ? null : '/recipes';
+      },
       builder: (context, state) {
-        final recipe = state.extra as Recipe;
+        final id = state.pathParameters['id']!;
+        final recipe = mockRecipes.firstWhere((recipe) => recipe.id == id);
         return RecipeDetailScreen(recipe: recipe);
       },
     ),

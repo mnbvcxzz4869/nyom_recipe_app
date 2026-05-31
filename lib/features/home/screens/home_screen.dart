@@ -222,7 +222,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         recipe: entry.recipe,
                         slotLabel: entry.slot,
                         onTap: () {
-                          context.push('/recipe-detail', extra: recipe);
+                          context.push('/recipe-detail/${entry.recipe.id}');
                         },
                       ),
                     ),
@@ -286,7 +286,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       type: RecipeCardType.discoveryGrid,
                       recipe: recipe,
                       onTap: () {
-                        context.push('/recipe-detail', extra: recipe);
+                        context.push('/recipe-detail/${recipe.id}');
                       },
                     ),
                   );

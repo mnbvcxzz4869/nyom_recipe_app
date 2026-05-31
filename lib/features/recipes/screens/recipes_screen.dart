@@ -33,13 +33,14 @@ class _RecipesScreenState extends State<RecipesScreen> {
 
   List<Recipe> get _filteredRecipes {
     return _mockRecipes.where((recipe) {
-      final matchesCategory = _selectedCategory == 'All' ||
-          recipe.category.name.toLowerCase() ==
-              _selectedCategory.toLowerCase();
-      final matchesSearch = _searchController.text.isEmpty ||
-          recipe.title
-              .toLowerCase()
-              .contains(_searchController.text.toLowerCase());
+      final matchesCategory =
+          _selectedCategory == 'All' ||
+          recipe.category.name.toLowerCase() == _selectedCategory.toLowerCase();
+      final matchesSearch =
+          _searchController.text.isEmpty ||
+          recipe.title.toLowerCase().contains(
+            _searchController.text.toLowerCase(),
+          );
       return matchesCategory && matchesSearch;
     }).toList();
   }
@@ -65,7 +66,7 @@ class _RecipesScreenState extends State<RecipesScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 16.0),
+                    const SizedBox(height: 24.0),
                     Text(
                       'My Recipes',
                       style: Theme.of(context).textTheme.headlineLarge,
@@ -111,19 +112,16 @@ class _RecipesScreenState extends State<RecipesScreen> {
                   crossAxisSpacing: 16.0,
                   childAspectRatio: 0.65,
                 ),
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final recipe = _filteredRecipes[index];
-                    return RecipeCard(
-                      type: RecipeCardType.discoveryGrid,
-                      recipe: recipe,
-                      onTap: () {
-                        context.push('/recipe-detail', extra: recipe);
-                      },
-                    );
-                  },
-                  childCount: _filteredRecipes.length,
-                ),
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final recipe = _filteredRecipes[index];
+                  return RecipeCard(
+                    type: RecipeCardType.discoveryGrid,
+                    recipe: recipe,
+                    onTap: () {
+                      context.push('/recipe-detail/${recipe.id}');
+                    },
+                  );
+                }, childCount: _filteredRecipes.length),
               ),
             ),
           ],

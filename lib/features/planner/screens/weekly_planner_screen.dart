@@ -56,7 +56,7 @@ class _WeeklyPlannerScreenState extends State<WeeklyPlannerScreen> {
                 padding: const EdgeInsets.only(
                   left: 16.0,
                   right: 16.0,
-                  top: 16.0,
+                  top: 24.0,
                   bottom: 16.0,
                 ),
                 child: Text(
@@ -151,7 +151,7 @@ class _WeeklyPlannerScreenState extends State<WeeklyPlannerScreen> {
                       type: RecipeCardType.mealPlannerRow,
                       recipe: recipe,
                       onTap: () {
-                        context.push('/recipe-detail', extra: recipe);
+                        context.push('/recipe-detail/${recipe.id}');
                       },
                     ),
                   ),

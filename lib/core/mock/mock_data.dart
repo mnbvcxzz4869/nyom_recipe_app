@@ -141,9 +141,9 @@ final mockRecipes = <Recipe>[
       ),
     ],
     steps: [
-      'Pat salmon dry and season with salt, pepper, and lemon zest.',
+      'Pat salmon dry and season with salt, pepper, and lemon zest., lorem ipsum dolori sdfjs heloo wrold apa kjabar semua hihihih,kita masak masak amasak',
       'Grill on high heat for 4 minutes per side until skin is crisp.',
-      'While salmon rests, slice avocado and fan on the plate.',
+      'While salmon rests, slice.',
       'Squeeze fresh lemon over everything and drizzle olive oil.',
     ],
     category: Category.noodle,
