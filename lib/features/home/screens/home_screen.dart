@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:nyom_recipe_app/core/mock/mock_data.dart';
+import 'package:nyom_recipe_app/features/auth/providers/auth_provider.dart';
 import 'package:nyom_recipe_app/features/grocery/models/grocery_item.dart';
 import 'package:nyom_recipe_app/features/planner/models/meal_plan.dart';
 import 'package:nyom_recipe_app/features/recipes/models/recipe.dart';
@@ -10,14 +12,14 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/recipe_card.dart';
 import '../../../shared/widgets/weekly_calendar_strip.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   final DateTime _calendarBaseDate = DateTime.now().subtract(
     const Duration(days: 2),
   );
@@ -25,7 +27,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final MealPlan _todayPlan = mockMealPlanForDate(DateTime.now());
   final List<Recipe> _mockRecipesFeed = mockRecipes.take(6).toList();
-  final List<GroceryItem> _groceryPreview = mockGroceryItems.take(5).toList();
 
   String _getCurrentMealSlotByTime() {
     final int currentHour = DateTime.now().hour;
@@ -65,6 +66,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final String readableToday = DateFormat(
       'EEEE, d MMM',
     ).format(DateTime.now());
+    final currentUserAsync = ref.watch(currentUserProvider);
+
     return Padding(
       padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 16),
       child: Row(
@@ -81,17 +84,40 @@ class _HomeScreenState extends State<HomeScreen> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              Text(
-                'Hello, Chef! 👋',
-                style: Theme.of(context).textTheme.headlineLarge,
+              currentUserAsync.when(
+                data: (user) => Text(
+                  'Hello, ${user?.username ?? 'Chef'}! 👋',
+                  style: Theme.of(context).textTheme.headlineLarge,
+                ),
+                loading: () => Text(
+                  'Hello! 👋',
+                  style: Theme.of(context).textTheme.headlineLarge,
+                ),
+                error: (_, __) => Text(
+                  'Hello, Chef! 👋',
+                  style: Theme.of(context).textTheme.headlineLarge,
+                ),
               ),
             ],
           ),
           GestureDetector(
-            onTap: () => _showProfileDialog(context),
-            child: const CircleAvatar(
-              radius: 24,
-              backgroundImage: AssetImage('assets/profile-pics.png'),
+            onTap: () => _showProfileDialog(context, ref),
+            child: currentUserAsync.when(
+              data: (user) => CircleAvatar(
+                radius: 24,
+                backgroundImage: user?.avatarUrl != null
+                    ? NetworkImage(user!.avatarUrl!)
+                    : const AssetImage('assets/profile-pics.png')
+                          as ImageProvider,
+              ),
+              loading: () => const CircleAvatar(
+                radius: 24,
+                backgroundImage: AssetImage('assets/profile-pics.png'),
+              ),
+              error: (_, __) => const CircleAvatar(
+                radius: 24,
+                backgroundImage: AssetImage('assets/profile-pics.png'),
+              ),
             ),
           ),
         ],
@@ -410,7 +436,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-void _showProfileDialog(BuildContext context) {
+void _showProfileDialog(BuildContext context, WidgetRef ref) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
@@ -431,12 +457,11 @@ void _showProfileDialog(BuildContext context) {
           child: Text("Cancel", style: Theme.of(context).textTheme.bodySmall),
         ),
         TextButton(
-          onPressed: () {},
-          style: TextButton.styleFrom(
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.zero,
-            ),
-          ),
+          onPressed: () async {
+            Navigator.pop(context); // close dialog first
+            await ref.read(authRepositoryProvider).signOut();
+            // GoRouter redirect handles navigation to /login automatically
+          },
           child: Text("Logout", style: Theme.of(context).textTheme.bodySmall),
         ),
       ],

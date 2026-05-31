@@ -1,20 +1,59 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart'; // 1. Import the SVG package
 import 'package:go_router/go_router.dart';
+import 'package:nyom_recipe_app/features/auth/providers/auth_provider.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
-
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isPasswordObscured = true;
+  bool _isLoading = false;
+
+  Future<void> _signIn() async {
+    setState(() => _isLoading = true);
+    try {
+      await ref
+          .read(authRepositoryProvider)
+          .signIn(
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim(),
+          );
+      // No need to navigate — GoRouter redirect handles it automatically
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _signInWithGoogle() async {
+    setState(() => _isLoading = true);
+    try {
+      await ref.read(authRepositoryProvider).signInWithGoogle();
+      // GoRouter redirect handles navigation
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   void dispose() {
@@ -74,11 +113,9 @@ class _LoginScreenState extends State<LoginScreen> {
               CustomButton(
                 text: 'Sign In',
                 type: CustomButtonType.primary,
-                onPressed: () {
-                  // Bypasses the database to let you instantly explore your dashboard layout!
-                  context.go('/home');
-                },
+                onPressed: _isLoading ? null : _signIn,
               ),
+
               // Visual Separator Divider
               Row(
                 children: [
@@ -113,11 +150,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   'assets/google-logo.webp',
                   height: 22,
                   width: 22,
-                  fit: BoxFit.contain,
                 ),
-                onPressed: () {
-                  // Execute federated identity single sign-on
-                },
+                onPressed: _isLoading ? null : _signInWithGoogle,
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,

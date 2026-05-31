@@ -32,6 +32,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
         .entries
         .map(
           (e) => GroceryItem(
+            id: e.value.id, // just reuse ingredient id here
             ingredient: e.value,
             isBought: _checkedIngredients[e.key],
           ),

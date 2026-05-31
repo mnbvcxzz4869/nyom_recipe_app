@@ -232,7 +232,7 @@ final List<GroceryItem> mockGroceryItems = [
       name: 'Salt',
       quantity: '1 pinch',
       category: IngredientCategory.pantry,
-    ),
+    ), id: 'i021',
   ),
   GroceryItem(
     ingredient: IngredientItem(
@@ -240,7 +240,7 @@ final List<GroceryItem> mockGroceryItems = [
       name: 'Water',
       quantity: '3 cups',
       category: IngredientCategory.pantry,
-    ),
+    ), id: 'i020',
   ),
   // 7 New items
   GroceryItem(
@@ -249,55 +249,7 @@ final List<GroceryItem> mockGroceryItems = [
       name: 'Chicken Breast',
       quantity: '2 lbs',
       category: IngredientCategory.protein,
-    ),
-  ),
-  GroceryItem(
-    ingredient: IngredientItem(
-      id: 'i023',
-      name: 'Spinach',
-      quantity: '1 bunch',
-      category: IngredientCategory.produce,
-    ),
-  ),
-  GroceryItem(
-    ingredient: IngredientItem(
-      id: 'i024',
-      name: 'Greek Yogurt',
-      quantity: '1 container',
-      category: IngredientCategory.dairy,
-    ),
-  ),
-  GroceryItem(
-    ingredient: IngredientItem(
-      id: 'i025',
-      name: 'Olive Oil',
-      quantity: '1 bottle',
-      category: IngredientCategory.pantry,
-    ),
-  ),
-  GroceryItem(
-    ingredient: IngredientItem(
-      id: 'i026',
-      name: 'Carrots',
-      quantity: '5 count',
-      category: IngredientCategory.produce,
-    ),
-  ),
-  GroceryItem(
-    ingredient: IngredientItem(
-      id: 'i027',
-      name: 'Cheddar Cheese',
-      quantity: '8 oz',
-      category: IngredientCategory.dairy,
-    ),
-  ),
-  GroceryItem(
-    ingredient: IngredientItem(
-      id: 'i028',
-      name: 'Salmon Fillet',
-      quantity: '2 count',
-      category: IngredientCategory.protein,
-    ),
+    ), id: 'i022',
   ),
 ];
 

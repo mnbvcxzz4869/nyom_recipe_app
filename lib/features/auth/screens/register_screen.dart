@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
+import '../providers/auth_provider.dart';
 
-class RegisterScreen extends StatefulWidget {
+class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _emailController = TextEditingController();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -19,6 +21,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   bool _isPasswordObscured = true;
   bool _isConfirmPasswordObscured = true;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -27,6 +30,58 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _register() async {
+    // Basic validation
+    if (_passwordController.text != _confirmPasswordController.text) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Passwords do not match')));
+      return;
+    }
+
+    if (_usernameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Username cannot be empty')));
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      await ref
+          .read(authRepositoryProvider)
+          .signUp(
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim(),
+            username: _usernameController.text.trim(),
+          );
+      // GoRouter redirect handles navigation automatically
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _signInWithGoogle() async {
+    setState(() => _isLoading = true);
+    try {
+      await ref.read(authRepositoryProvider).signInWithGoogle();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -40,14 +95,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(
-                height: 12,
-              ), // Slightly smaller top padding to fit the extra fields
-              SvgPicture.asset(
-                'assets/nyom-logo.svg',
-                height: 180,
-              ), // Slightly smaller logo for the longer form
-              // Email Field
+              const SizedBox(height: 12),
+              SvgPicture.asset('assets/nyom-logo.svg', height: 180),
               CustomTextField(
                 label: 'Email Address',
                 hintText: 'Enter your email address',
@@ -60,7 +109,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 controller: _usernameController,
                 keyboardType: TextInputType.name,
               ),
-              // Password Field
               CustomTextField(
                 label: 'Password',
                 hintText: 'Create a password',
@@ -74,13 +122,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                   onPressed: () {
-                    setState(() {
-                      _isPasswordObscured = !_isPasswordObscured;
-                    });
+                    setState(() => _isPasswordObscured = !_isPasswordObscured);
                   },
                 ),
               ),
-              // Confirm Password Field
               CustomTextField(
                 label: 'Confirm Password',
                 hintText: 'Re-enter your password',
@@ -94,9 +139,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                   onPressed: () {
-                    setState(() {
-                      _isConfirmPasswordObscured = !_isConfirmPasswordObscured;
-                    });
+                    setState(
+                      () => _isConfirmPasswordObscured =
+                          !_isConfirmPasswordObscured,
+                    );
                   },
                 ),
               ),
@@ -104,13 +150,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
               CustomButton(
                 text: 'Register',
                 type: CustomButtonType.primary,
-                onPressed: () {
-                  context.go('/home');
-                },
+                onPressed: _isLoading ? null : _register,
               ),
               const SizedBox(height: 4),
-
-              // Visual Separator Divider
               Row(
                 children: [
                   Expanded(
@@ -145,11 +187,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   width: 22,
                   fit: BoxFit.contain,
                 ),
-                onPressed: () {
-                  // Execute federated identity single sign-on
-                },
+                onPressed: _isLoading ? null : _signInWithGoogle,
               ),
-              // Dynamic Navigation Footer Interface
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -157,12 +196,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     "Already have an account? ",
                     style: theme.textTheme.bodySmall,
                   ),
-                  // Note: Removed the extra GestureDetector since TextButton handles taps natively!
                   TextButton(
-                    onPressed: () {
-                      context
-                          .pop(); // Drags them back down smoothly to your LoginScreen canvas
-                    },
+                    onPressed: () => context.pop(),
                     style: TextButton.styleFrom(
                       foregroundColor: theme.colorScheme.primary,
                     ),
