@@ -4,16 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nyom_recipe_app/features/grocery/screens/grocery_list_screen.dart';
 import 'package:nyom_recipe_app/features/home/screens/home_screen.dart';
-import 'package:nyom_recipe_app/core/mock/mock_data.dart';
 import 'package:nyom_recipe_app/features/recipes/screens/ai_parse_screen.dart';
 import 'package:nyom_recipe_app/features/recipes/screens/recipe_detail_screen.dart';
+import 'package:nyom_recipe_app/features/recipes/screens/recipe_detail_screen.dart';
+import 'package:nyom_recipe_app/features/recipes/models/recipe.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/register_screen.dart';
 import '../../shared/widgets/app_bottom_nav.dart';
 import '../../features/recipes/screens/recipes_screen.dart';
 import '../../features/planner/screens/weekly_planner_screen.dart';
 import '../services/supabase_service.dart';
-
 
 // Temporary lightweight placeholder layouts to ensure initial compilation succeeds
 class PlaceholderScreen extends StatelessWidget {
@@ -61,16 +61,15 @@ final appRouter = GoRouter(
   initialLocation: '/login',
   redirect: (context, state) {
     final isLoggedIn = supabase.auth.currentSession != null;
-    final isOnAuthScreen = state.matchedLocation == '/login' ||
+    final isOnAuthScreen =
+        state.matchedLocation == '/login' ||
         state.matchedLocation == '/register';
 
     if (!isLoggedIn && !isOnAuthScreen) return '/login';
     if (isLoggedIn && isOnAuthScreen) return '/home';
     return null;
   },
-  refreshListenable: GoRouterRefreshStream(
-    supabase.auth.onAuthStateChange,
-  ),
+  refreshListenable: GoRouterRefreshStream(supabase.auth.onAuthStateChange),
   routes: [
     // --- AUTHENTICATION FLOW ROUTING CHANNELS ---
     GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
@@ -88,18 +87,20 @@ final appRouter = GoRouter(
     ),
 
     GoRoute(
+      path: '/recipe-edit',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) {
+        final recipe = state.extra as Recipe?;
+        return AiParseScreen(initialRecipe: recipe);
+      },
+    ),
+
+    GoRoute(
       path: '/recipe-detail/:id',
       parentNavigatorKey: _rootNavigatorKey,
-      redirect: (context, state) {
-        final id = state.pathParameters['id'];
-        final exists =
-            id != null && mockRecipes.any((recipe) => recipe.id == id);
-        return exists ? null : '/recipes';
-      },
       builder: (context, state) {
         final id = state.pathParameters['id']!;
-        final recipe = mockRecipes.firstWhere((recipe) => recipe.id == id);
-        return RecipeDetailScreen(recipe: recipe);
+        return RecipeDetailScreen(recipeId: id);
       },
     ),
 

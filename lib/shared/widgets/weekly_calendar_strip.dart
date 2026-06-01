@@ -12,6 +12,12 @@ class WeeklyCalendarStrip extends StatefulWidget {
   final Function(DateTime selectedDate)? onDateChanged;
   final CalendarStripVariant variant;
 
+  /// Lowest week number the left chevron will allow (inclusive). Defaults to 1.
+  final int minWeekNumber;
+
+  /// Highest week number the right chevron will allow (inclusive). Defaults to unbounded.
+  final int? maxWeekNumber;
+
   const WeeklyCalendarStrip({
     super.key,
     required this.baseDate,
@@ -20,6 +26,8 @@ class WeeklyCalendarStrip extends StatefulWidget {
     this.showDayRow = true,
     this.onDateChanged,
     this.variant = CalendarStripVariant.planner,
+    this.minWeekNumber = 1,
+    this.maxWeekNumber,
   });
 
   const WeeklyCalendarStrip.grocery({
@@ -27,6 +35,8 @@ class WeeklyCalendarStrip extends StatefulWidget {
     required this.baseDate,
     required this.activeWeekNumber,
     required this.onWeekChanged,
+    this.minWeekNumber = 1,
+    this.maxWeekNumber,
   }) : showDayRow = false,
        onDateChanged = null,
        variant = CalendarStripVariant.grocery;
@@ -38,6 +48,8 @@ class WeeklyCalendarStrip extends StatefulWidget {
     required this.onWeekChanged,
     this.showDayRow = true,
     this.onDateChanged,
+    this.minWeekNumber = 1,
+    this.maxWeekNumber,
   }) : variant = CalendarStripVariant.home;
 
   @override
@@ -45,7 +57,7 @@ class WeeklyCalendarStrip extends StatefulWidget {
 }
 
 class _WeeklyCalendarStripState extends State<WeeklyCalendarStrip> {
-  int _activeDayIndex = DateTime.now().weekday - 1;
+  late int _activeDayIndex;
 
   final List<String> _dayNames = [
     'Mon',
@@ -56,6 +68,25 @@ class _WeeklyCalendarStripState extends State<WeeklyCalendarStrip> {
     'Sat',
     'Sun',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Default highlight to today's weekday (Mon=0 … Sun=6)
+    _activeDayIndex = DateTime.now().weekday - 1;
+
+    // Fire onDateChanged after the first frame so the parent provider
+    // is seeded with today's actual date on initial render.
+    if (widget.onDateChanged != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          widget.onDateChanged!(
+            _getDaysForWeek(widget.activeWeekNumber)[_activeDayIndex],
+          );
+        }
+      });
+    }
+  }
 
   List<DateTime> _getDaysForWeek(int weekNum) {
     final DateTime baseMonday = widget.baseDate.subtract(
@@ -78,7 +109,7 @@ class _WeeklyCalendarStripState extends State<WeeklyCalendarStrip> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         IconButton(
-          onPressed: widget.activeWeekNumber > 1
+          onPressed: widget.activeWeekNumber > widget.minWeekNumber
               ? () {
                   widget.onWeekChanged(widget.activeWeekNumber - 1);
                   widget.onDateChanged?.call(
@@ -109,14 +140,21 @@ class _WeeklyCalendarStripState extends State<WeeklyCalendarStrip> {
           ],
         ),
         IconButton(
-          onPressed: () {
-            widget.onWeekChanged(widget.activeWeekNumber + 1);
-            widget.onDateChanged?.call(
-              _getDaysForWeek(widget.activeWeekNumber + 1)[_activeDayIndex],
-            );
-          },
+          onPressed:
+              widget.maxWeekNumber == null ||
+                  widget.activeWeekNumber < widget.maxWeekNumber!
+              ? () {
+                  widget.onWeekChanged(widget.activeWeekNumber + 1);
+                  widget.onDateChanged?.call(
+                    _getDaysForWeek(
+                      widget.activeWeekNumber + 1,
+                    )[_activeDayIndex],
+                  );
+                }
+              : null,
           icon: const Icon(Icons.chevron_right_rounded, size: 28),
           color: AppTheme.headingGreen,
+          disabledColor: AppTheme.greyAccent.withValues(alpha: 0.3),
         ),
       ],
     );

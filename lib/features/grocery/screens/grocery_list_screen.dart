@@ -1,30 +1,44 @@
 import 'package:flutter/material.dart';
-import 'package:nyom_recipe_app/core/mock/mock_data.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nyom_recipe_app/features/auth/providers/auth_provider.dart';
 import 'package:nyom_recipe_app/features/grocery/models/grocery_item.dart';
+import 'package:nyom_recipe_app/features/grocery/providers/grocery_provider.dart';
 import 'package:nyom_recipe_app/features/recipes/models/ingredient_item.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/weekly_calendar_strip.dart';
 import '../widgets/grocery_progress_card.dart';
 import '../widgets/grocery_category_card.dart';
 
-class GroceryListScreen extends StatefulWidget {
+class GroceryListScreen extends ConsumerStatefulWidget {
   const GroceryListScreen({super.key});
 
   @override
-  State<GroceryListScreen> createState() => _GroceryListScreenState();
+  ConsumerState<GroceryListScreen> createState() => _GroceryListScreenState();
 }
 
-class _GroceryListScreenState extends State<GroceryListScreen> {
-  final DateTime _calendarBaseDate = DateTime.now().subtract(
-    const Duration(days: 2),
-  );
+class _GroceryListScreenState extends ConsumerState<GroceryListScreen> {
+  DateTime get _calendarBaseDate {
+    final signupDate = ref.watch(userCreatedAtProvider).value;
+    final anchor = signupDate ?? DateTime.now();
+    return anchor.subtract(Duration(days: anchor.weekday - 1));
+  }
+
+  int get _currentWeekNumber {
+    final base = _calendarBaseDate;
+    final today = DateTime.now();
+    final todayMonday = today.subtract(Duration(days: today.weekday - 1));
+    return ((todayMonday.difference(base).inDays) ~/ 7) + 1;
+  }
+
+  int get _minWeekNumber =>
+      (_currentWeekNumber - 2).clamp(1, _currentWeekNumber);
+  int get _maxWeekNumber => _currentWeekNumber + 2;
+
   int _selectedWeekNumber = 1;
 
-  List<GroceryItem> _groceryItems = mockGroceryItems.toList();
-
-  Map<String, List<GroceryItem>> get _grouped {
+  Map<String, List<GroceryItem>> _grouped(List<GroceryItem> items) {
     final map = <String, List<GroceryItem>>{};
-    for (final item in _groceryItems) {
+    for (final item in items) {
       (map[item.ingredient.category?.label ?? 'Other'] ??= []).add(item);
     }
     return map;
@@ -32,21 +46,74 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final asyncItems = ref.watch(groceryProvider);
+
+    return asyncItems.when(
+      loading: () => const Scaffold(
+        backgroundColor: AppTheme.baseBackground,
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      error: (err, _) => Scaffold(
+        backgroundColor: AppTheme.baseBackground,
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.error_outline_rounded,
+                size: 48,
+                color: AppTheme.greyAccent,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Could not load grocery list',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => ref.invalidate(groceryProvider),
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      ),
+      data: (items) => _buildScreen(context, items),
+    );
+  }
+
+  Widget _buildScreen(BuildContext context, List<GroceryItem> items) {
+    final grouped = _grouped(items);
+
     int totalItems = 0;
     int boughtItems = 0;
-
-    for (final itemsList in _grouped.values) {
-      totalItems += itemsList.length;
-      boughtItems += itemsList.where((item) => item.isBought).length;
+    for (final list in grouped.values) {
+      totalItems += list.length;
+      boughtItems += list.where((i) => i.isBought).length;
     }
 
     return Scaffold(
       backgroundColor: AppTheme.baseBackground,
+      // ── Clear-bought FAB ──────────────────────────────────────────────────
+      floatingActionButton: boughtItems > 0
+          ? FloatingActionButton.extended(
+              onPressed: () async {
+                await ref.read(groceryProvider.notifier).clearBought();
+              },
+              backgroundColor: AppTheme.headingGreen,
+              icon: const Icon(Icons.delete_sweep_rounded, color: Colors.white),
+              label: const Text(
+                'Clear bought',
+                style: TextStyle(color: Colors.white),
+              ),
+            )
+          : null,
       body: SafeArea(
         bottom: false,
         child: CustomScrollView(
           clipBehavior: Clip.none,
           slivers: [
+            // ── Title ───────────────────────────────────────────────────────
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.only(
@@ -62,6 +129,7 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
               ),
             ),
 
+            // ── Calendar strip ───────────────────────────────────────────
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(
@@ -72,14 +140,15 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
                   baseDate: _calendarBaseDate,
                   activeWeekNumber: _selectedWeekNumber,
                   onWeekChanged: (newWeek) {
-                    setState(() {
-                      _selectedWeekNumber = newWeek;
-                    });
+                    setState(() => _selectedWeekNumber = newWeek);
                   },
+                  minWeekNumber: _minWeekNumber,
+                  maxWeekNumber: _maxWeekNumber,
                 ),
               ),
             ),
 
+            // ── Progress card ────────────────────────────────────────────
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(
@@ -95,29 +164,58 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
 
             const SliverToBoxAdapter(child: SizedBox(height: 8.0)),
 
-            SliverPadding(
-              padding: const EdgeInsets.only(
-                left: 16.0,
-                right: 16.0,
-                bottom: 110.0,
-              ),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate(
-                  _grouped.keys.map((category) {
-                    return GroceryCategoryCard(
-                      categoryHeading: category,
-                      items: _grouped[category]!,
-                      type: IngredientListType.groceryCheck,
-                      onItemToggle: (itemIndex, newValue) {
-                        setState(() {
-                          _grouped[category]![itemIndex].isBought = newValue;
-                        });
-                      },
-                    );
-                  }).toList(),
+            // ── Empty state ──────────────────────────────────────────────
+            if (items.isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('🛒', style: TextStyle(fontSize: 48)),
+                      const SizedBox(height: 12),
+                      Text(
+                        'No grocery items yet',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Plan meals in the Weekly Planner\nto auto-populate your list.',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppTheme.greyAccent,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              // ── Category cards ─────────────────────────────────────────
+              SliverPadding(
+                padding: const EdgeInsets.only(
+                  left: 16.0,
+                  right: 16.0,
+                  bottom: 110.0,
+                ),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate(
+                    grouped.keys.map((category) {
+                      final categoryItems = grouped[category]!;
+                      return GroceryCategoryCard(
+                        categoryHeading: category,
+                        items: categoryItems,
+                        type: IngredientListType.groceryCheck,
+                        onItemToggle: (itemIndex, newValue) {
+                          ref
+                              .read(groceryProvider.notifier)
+                              .toggle(categoryItems[itemIndex].id, newValue);
+                        },
+                      );
+                    }).toList(),
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ),

@@ -32,7 +32,7 @@ class GroceryProgressCard extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 Text(
-                  '${((boughtItems / totalItems) * 100).round()}%',
+                  '${(percentage * 100).round()}%',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],

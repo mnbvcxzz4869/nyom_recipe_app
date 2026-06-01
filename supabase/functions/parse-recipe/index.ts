@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SYSTEM_PROMPT = `You are a recipe parser. Given either raw recipe text or a recipe URL's content, extract and return a structured recipe as JSON.
+const SYSTEM_PROMPT = `You are a recipe parser. Given either raw recipe text, a recipe article URL, or a YouTube video URL, extract and return a structured recipe as JSON.
 Return ONLY valid JSON with no markdown, no backticks, no explanation. Exactly this structure:
 {
   "title": "string",
@@ -29,7 +29,11 @@ Rules:
 - category must be one of the exact enum values listed
 - steps is an ordered array of plain strings`;
 
-async function fetchUrlContent(url: string): Promise<string> {
+function isYouTubeUrl(url: string): boolean {
+  return /^https?:\/\/(www\.)?(youtube\.com\/watch|youtu\.be\/)/.test(url);
+}
+
+async function fetchArticleContent(url: string): Promise<string> {
   try {
     const response = await fetch(url);
     const html = await response.text();
@@ -46,13 +50,11 @@ async function fetchUrlContent(url: string): Promise<string> {
 }
 
 Deno.serve(async (req) => {
-  // 1. Handle CORS Preflight immediately
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    // 2. Safely capture incoming request body
     let body;
     try {
       body = await req.json();
@@ -71,25 +73,44 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 3. Verify API Key exists
     const apiKey = Deno.env.get("GEMINI_API_KEY");
     if (!apiKey) {
       return new Response(
-        JSON.stringify({ error: "GEMINI_API_KEY environment variable is totally missing from Supabase Vault." }),
+        JSON.stringify({ error: "GEMINI_API_KEY environment variable is missing from Supabase Vault." }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // 4. Resolve content
-    const content = mode === "url" ? await fetchUrlContent(input) : input;
+    // ── Build Gemini request parts based on mode ──────────────────────────
+    let parts: object[];
 
-    // 5. Fire request to Gemini
+    if (mode === "url" && isYouTubeUrl(input)) {
+      // YouTube: pass directly as a fileData URI — Gemini fetches & understands it natively
+      parts = [
+        {
+          fileData: {
+            fileUri: input,
+          },
+        },
+        {
+          text: "Extract the recipe from this YouTube video and return it as JSON following the schema in your instructions.",
+        },
+      ];
+    } else if (mode === "url") {
+      // Regular article: scrape HTML and pass as text
+      const articleText = await fetchArticleContent(input);
+      parts = [{ text: articleText }];
+    } else {
+      // Plain text paste
+      parts = [{ text: input }];
+    }
+
     const geminiResponse = await fetch(`${GEMINI_URL}?key=${apiKey}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
-        contents: [{ parts: [{ text: content }] }],
+        contents: [{ parts }],
         generationConfig: {
           temperature: 0.1,
           maxOutputTokens: 2048,
@@ -101,7 +122,7 @@ Deno.serve(async (req) => {
     if (!geminiResponse.ok) {
       const errorDetails = await geminiResponse.text();
       return new Response(
-        JSON.stringify({ error: "Google Gemini API rejected request", status: geminiResponse.status, details: errorDetails }),
+        JSON.stringify({ error: "Gemini API rejected request", status: geminiResponse.status, details: errorDetails }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -113,13 +134,12 @@ Deno.serve(async (req) => {
       rawText = rawText.replace(/```json|```/g, "").trim();
     }
 
-    // 6. Safely parse LLM output
     let recipe;
     try {
       recipe = JSON.parse(rawText);
     } catch (parseErr) {
       return new Response(
-        JSON.stringify({ error: "Gemini output failed JSON validation parsing", rawOutput: rawText, details: parseErr.message }),
+        JSON.stringify({ error: "Gemini output failed JSON parsing", rawOutput: rawText, details: parseErr.message }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -129,9 +149,8 @@ Deno.serve(async (req) => {
     });
 
   } catch (e) {
-    // Top level catcher for everything else
     return new Response(
-      JSON.stringify({ error: "Global Exception caught inside edge function", message: e.message, stack: e.stack }),
+      JSON.stringify({ error: "Unhandled exception in edge function", message: e.message, stack: e.stack }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

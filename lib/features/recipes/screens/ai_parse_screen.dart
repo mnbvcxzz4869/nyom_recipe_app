@@ -1,17 +1,24 @@
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
+import 'package:nyom_recipe_app/core/services/supabase_service.dart';
+import 'package:nyom_recipe_app/features/recipes/models/ingredient_item.dart';
+import 'package:nyom_recipe_app/features/recipes/models/recipe.dart';
+import 'package:nyom_recipe_app/features/recipes/providers/recipe_provider.dart';
+import 'package:nyom_recipe_app/features/recipes/screens/recipe_detail_screen.dart';
 import 'package:nyom_recipe_app/shared/widgets/custom_text_field.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/custom_button.dart';
 
-// Simple data class to hold ingredient rows
+// ─── Ingredient row data ─────────────────────────────────────────────────────
 class _IngredientEntry {
   final TextEditingController nameController;
   final TextEditingController qtyController;
 
-  _IngredientEntry()
-    : nameController = TextEditingController(),
-      qtyController = TextEditingController();
+  _IngredientEntry({String name = '', String qty = ''})
+    : nameController = TextEditingController(text: name),
+      qtyController = TextEditingController(text: qty);
 
   void dispose() {
     nameController.dispose();
@@ -19,31 +26,36 @@ class _IngredientEntry {
   }
 }
 
-class AiParseScreen extends StatefulWidget {
-  const AiParseScreen({super.key});
+// ─── Screen ──────────────────────────────────────────────────────────────────
+class AiParseScreen extends ConsumerStatefulWidget {
+  final Recipe? initialRecipe;
+  const AiParseScreen({super.key, this.initialRecipe});
 
   @override
-  State<AiParseScreen> createState() => _AiParseScreenState();
+  ConsumerState<AiParseScreen> createState() => _AiParseScreenState();
 }
 
-class _AiParseScreenState extends State<AiParseScreen>
+class _AiParseScreenState extends ConsumerState<AiParseScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  // --- Tab 1: AI Parse ---
+  // Tab 1 — AI Parse
   final _textInputController = TextEditingController();
+  bool _isParsingText = false;
+  String? _textParseError;
 
-  // --- Tab 2: From URL ---
+  // Tab 2 — From URL
   final _urlInputController = TextEditingController();
+  bool _isParsingUrl = false;
+  String? _urlParseError;
 
-  // --- Tab 3: Manual ---
+  // Tab 3 — Manual (also receives pre-filled data from tabs 1 & 2)
   final _manualTitleController = TextEditingController();
   final _manualTimeController = TextEditingController();
   String? _selectedCategory;
-
-  // Start with 1 ingredient row and 1 step row
-  final List<_IngredientEntry> _ingredients = [_IngredientEntry()];
-  final List<TextEditingController> _steps = [TextEditingController()];
+  bool _isSaving = false;
+  List<_IngredientEntry> _ingredients = [_IngredientEntry()];
+  List<TextEditingController> _steps = [TextEditingController()];
 
   final List<String> _categories = [
     'Rice',
@@ -55,10 +67,19 @@ class _AiParseScreenState extends State<AiParseScreen>
     'Desserts',
   ];
 
+  static const _uuid = Uuid();
+  String? _editingId;
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    if (widget.initialRecipe != null) {
+      _editingId = widget.initialRecipe!.id;
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _prefillManualTab(widget.initialRecipe!),
+      );
+    }
   }
 
   @override
@@ -73,9 +94,175 @@ class _AiParseScreenState extends State<AiParseScreen>
     super.dispose();
   }
 
-  void _addIngredient() {
-    setState(() => _ingredients.add(_IngredientEntry()));
+  // ─── Pre-fill Manual tab from a parsed Recipe ──────────────────────────────
+  void _prefillManualTab(Recipe recipe) {
+    setState(() {
+      _manualTitleController.text = recipe.title;
+      _manualTimeController.text = recipe.durationMinutes.toString();
+      _selectedCategory = recipe.category.label;
+
+      // ── Ingredients: reuse existing controllers, add/remove rows as needed ──
+      final newIngredients = recipe.ingredients.isEmpty
+          ? [IngredientItem(id: '', name: '', quantity: '')]
+          : recipe.ingredients;
+
+      // Fill existing rows
+      for (int i = 0; i < newIngredients.length; i++) {
+        if (i < _ingredients.length) {
+          _ingredients[i].nameController.text = newIngredients[i].name;
+          _ingredients[i].qtyController.text = newIngredients[i].quantity;
+        } else {
+          _ingredients.add(
+            _IngredientEntry(
+              name: newIngredients[i].name,
+              qty: newIngredients[i].quantity,
+            ),
+          );
+        }
+      }
+      // Remove extra rows if new list is shorter
+      while (_ingredients.length > newIngredients.length) {
+        _ingredients.removeLast().dispose();
+      }
+
+      // ── Steps: reuse existing controllers, add/remove rows as needed ──
+      final newSteps = recipe.steps.isEmpty ? [''] : recipe.steps;
+
+      for (int i = 0; i < newSteps.length; i++) {
+        if (i < _steps.length) {
+          _steps[i].text = newSteps[i];
+        } else {
+          _steps.add(TextEditingController(text: newSteps[i]));
+        }
+      }
+      while (_steps.length > newSteps.length) {
+        _steps.removeLast().dispose();
+      }
+    });
+
+    // Jump to Manual tab so the user reviews the pre-filled data
+    _tabController.animateTo(2);
   }
+
+  // ─── Tab 1: Parse from text ────────────────────────────────────────────────
+  Future<void> _handleParseText() async {
+    final text = _textInputController.text.trim();
+    if (text.isEmpty) return;
+
+    setState(() {
+      _isParsingText = true;
+      _textParseError = null;
+    });
+
+    try {
+      final recipe = await ref.read(geminiServiceProvider).parseFromText(text);
+      if (mounted) _prefillManualTab(recipe);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _textParseError = 'Parsing failed. Please try again.');
+      }
+    } finally {
+      if (mounted) setState(() => _isParsingText = false);
+    }
+  }
+
+  // ─── Tab 2: Parse from URL ────────────────────────────────────────────────
+  Future<void> _handleParseUrl() async {
+    final url = _urlInputController.text.trim();
+    if (url.isEmpty) return;
+
+    setState(() {
+      _isParsingUrl = true;
+      _urlParseError = null;
+    });
+
+    try {
+      final recipe = await ref.read(geminiServiceProvider).parseFromUrl(url);
+      if (mounted) _prefillManualTab(recipe);
+    } catch (e) {
+      if (mounted) {
+        setState(
+          () =>
+              _urlParseError = 'Could not parse that URL. Please try another.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isParsingUrl = false);
+    }
+  }
+
+  // ─── Tab 3: Save manual / validated recipe ────────────────────────────────
+  Future<void> _handleSave() async {
+    final title = _manualTitleController.text.trim();
+    if (title.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a recipe name.')),
+      );
+      return;
+    }
+
+    final categoryName = _selectedCategory?.toLowerCase();
+    Category category;
+    try {
+      category = categoryName != null
+          ? Category.values.byName(categoryName)
+          : Category.values.first;
+    } catch (_) {
+      category = Category.values.first;
+    }
+
+    final ingredients = _ingredients
+        .where((e) => e.nameController.text.trim().isNotEmpty)
+        .map(
+          (e) => IngredientItem(
+            id: _uuid.v4(),
+            name: e.nameController.text.trim(),
+            quantity: e.qtyController.text.trim(),
+          ),
+        )
+        .toList();
+
+    final steps = _steps
+        .map((c) => c.text.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
+
+    final recipe = Recipe(
+      id: _editingId ?? '',
+      title: title,
+      durationMinutes: int.tryParse(_manualTimeController.text.trim()) ?? 0,
+      category: category,
+      ingredients: ingredients,
+      steps: steps,
+    );
+
+    setState(() => _isSaving = true);
+    try {
+      if (_editingId != null && _editingId!.isNotEmpty) {
+        await ref.read(recipesProvider.notifier).edit(recipe);
+        ref.invalidate(recipeByIdProvider(_editingId!));
+      } else {
+        await ref.read(recipesProvider.notifier).add(recipe);
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Recipe saved!')));
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to save. Please try again.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  // ─── Ingredient helpers ───────────────────────────────────────────────────
+  void _addIngredient() => setState(() => _ingredients.add(_IngredientEntry()));
 
   void _removeIngredient(int index) {
     setState(() {
@@ -84,9 +271,7 @@ class _AiParseScreenState extends State<AiParseScreen>
     });
   }
 
-  void _addStep() {
-    setState(() => _steps.add(TextEditingController()));
-  }
+  void _addStep() => setState(() => _steps.add(TextEditingController()));
 
   void _removeStep(int index) {
     setState(() {
@@ -95,11 +280,7 @@ class _AiParseScreenState extends State<AiParseScreen>
     });
   }
 
-  void _handleManualSave() {
-    if (_manualTitleController.text.trim().isEmpty) return;
-    debugPrint('Saving manual recipe...');
-  }
-
+  // ─── Build ────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -122,14 +303,14 @@ class _AiParseScreenState extends State<AiParseScreen>
                     onPressed: () => Navigator.pop(context),
                   ),
                   Text(
-                    'Add Recipe',
+                    widget.initialRecipe != null ? 'Edit Recipe' : 'Add Recipe',
                     style: Theme.of(context).textTheme.headlineLarge,
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 8),
-            // ── Tab Bar ──────────────────────────────────────────────────
+            // ── Tab Bar ─────────────────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: DottedBorder(
@@ -185,7 +366,7 @@ class _AiParseScreenState extends State<AiParseScreen>
     );
   }
 
-  // ── TAB 1 — AI Parse ──────────────────────────────────────────────────────
+  // ── TAB 1 — AI Parse ───────────────────────────────────────────────────────
   Widget _buildAiParseTab() {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -210,7 +391,7 @@ class _AiParseScreenState extends State<AiParseScreen>
                 style: Theme.of(context).textTheme.bodyMedium,
                 decoration: InputDecoration(
                   hintText:
-                      'Paste recipe text from TikTok caption, YouTube description , or anywhere!',
+                      'Paste recipe text from TikTok caption, YouTube description, or anywhere!',
                   hintStyle: Theme.of(context).textTheme.labelLarge,
                   border: InputBorder.none,
                   focusedBorder: InputBorder.none,
@@ -220,10 +401,35 @@ class _AiParseScreenState extends State<AiParseScreen>
               ),
             ),
           ),
-          CustomButton(
-            text: 'Parse with AI',
-            type: CustomButtonType.primary,
-            onPressed: () {},
+          const SizedBox(height: 8),
+          if (_textParseError != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                _textParseError!,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: Colors.red),
+              ),
+            ),
+          if (_isParsingText)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else
+            CustomButton(
+              text: 'Parse with AI',
+              type: CustomButtonType.primary,
+              onPressed: _handleParseText,
+            ),
+          const SizedBox(height: 8),
+          Text(
+            'AI will pre-fill the Manual tab — you can review and edit before saving.',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: AppTheme.greyAccent),
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 40),
         ],
@@ -231,24 +437,47 @@ class _AiParseScreenState extends State<AiParseScreen>
     );
   }
 
-  // ── TAB 2 — From URL ──────────────────────────────────────────────────────
+  // ── TAB 2 — From URL ───────────────────────────────────────────────────────
   Widget _buildFromUrlTab() {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Using CustomTextField for consistent styling
           CustomTextField(
             label: 'Paste URL',
             hintText: 'Paste a YouTube link or article URL',
             controller: _urlInputController,
             keyboardType: TextInputType.url,
           ),
-          CustomButton(
-            text: 'Parse with AI',
-            type: CustomButtonType.primary,
-            onPressed: () {},
+          if (_urlParseError != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                _urlParseError!,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: Colors.red),
+              ),
+            ),
+          if (_isParsingUrl)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else
+            CustomButton(
+              text: 'Parse with AI',
+              type: CustomButtonType.primary,
+              onPressed: _handleParseUrl,
+            ),
+          const SizedBox(height: 8),
+          Text(
+            'AI will pre-fill the Manual tab — you can review and edit before saving.',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: AppTheme.greyAccent),
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 40),
         ],
@@ -275,7 +504,6 @@ class _AiParseScreenState extends State<AiParseScreen>
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Estimated Time
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -334,7 +562,6 @@ class _AiParseScreenState extends State<AiParseScreen>
                 ),
               ),
               const SizedBox(width: 12),
-              // Category
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -357,7 +584,7 @@ class _AiParseScreenState extends State<AiParseScreen>
                           child: DropdownButton<String>(
                             value: _selectedCategory,
                             hint: Text(
-                              'Select Category',
+                              'Select',
                               style: Theme.of(context).textTheme.labelLarge,
                             ),
                             isExpanded: true,
@@ -386,7 +613,7 @@ class _AiParseScreenState extends State<AiParseScreen>
           ),
           const SizedBox(height: 16),
 
-          // ── Ingredients List ──
+          // ── Ingredients ──
           Text(
             'Ingredients List',
             style: Theme.of(context).textTheme.titleMedium,
@@ -486,42 +713,34 @@ class _AiParseScreenState extends State<AiParseScreen>
           ),
           const SizedBox(height: 16),
 
-          CustomButton(
-            text: 'Save',
-            type: CustomButtonType.primary,
-            onPressed: _handleManualSave,
-          ),
+          // ── Save ──
+          if (_isSaving)
+            const Center(child: CircularProgressIndicator())
+          else
+            CustomButton(
+              text: 'Save Recipe',
+              type: CustomButtonType.primary,
+              onPressed: _handleSave,
+            ),
           const SizedBox(height: 60),
         ],
       ),
     );
   }
 
-  // ── Ingredient row with swipe-to-delete ───────────────────────────────────
+  // ── Ingredient row ────────────────────────────────────────────────────────
   Widget _buildIngredientRow(int index) {
-    // Don't allow deleting the last remaining row
     final canDelete = _ingredients.length > 1;
-
     return Dismissible(
-      key: ValueKey(_ingredients[index]),
+      key: ValueKey(index),
       direction: canDelete
           ? DismissDirection.endToStart
           : DismissDirection.none,
       onDismissed: (_) => _removeIngredient(index),
-      // Red delete background revealed on swipe
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
-        decoration: BoxDecoration(
-          color: AppTheme.greyAccent.withValues(alpha: 0.25),
-          borderRadius: index == 0 && _ingredients.length == 1
-              ? BorderRadius.circular(8)
-              : index == 0
-              ? const BorderRadius.vertical(top: Radius.circular(14))
-              : index == _ingredients.length - 1
-              ? const BorderRadius.vertical(bottom: Radius.circular(0))
-              : BorderRadius.zero,
-        ),
+        color: AppTheme.greyAccent.withValues(alpha: 0.25),
         child: Icon(Icons.delete_outline, color: AppTheme.greyAccent),
       ),
       child: Column(
@@ -536,7 +755,7 @@ class _AiParseScreenState extends State<AiParseScreen>
                     controller: _ingredients[index].nameController,
                     style: Theme.of(context).textTheme.bodyMedium,
                     decoration: InputDecoration(
-                      hintText: 'Ingredients name',
+                      hintText: 'Ingredient name',
                       hintStyle: Theme.of(context).textTheme.labelLarge,
                       border: InputBorder.none,
                       focusedBorder: InputBorder.none,
@@ -579,12 +798,11 @@ class _AiParseScreenState extends State<AiParseScreen>
     );
   }
 
-  // ── Step row with swipe-to-delete ─────────────────────────────────────────
+  // ── Step row ──────────────────────────────────────────────────────────────
   Widget _buildStepRow(int index) {
     final canDelete = _steps.length > 1;
-
     return Dismissible(
-      key: ValueKey(_steps[index]),
+      key: ValueKey(index),
       direction: canDelete
           ? DismissDirection.endToStart
           : DismissDirection.none,
@@ -592,72 +810,50 @@ class _AiParseScreenState extends State<AiParseScreen>
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
-        decoration: BoxDecoration(
-          color: AppTheme.greyAccent.withValues(alpha: 0.25),
-          borderRadius: index == 0 && _ingredients.length == 1
-              ? BorderRadius.circular(8)
-              : index == 0
-              ? const BorderRadius.vertical(top: Radius.circular(14))
-              : index == _ingredients.length - 1
-              ? const BorderRadius.vertical(bottom: Radius.circular(0))
-              : BorderRadius.zero,
-        ),
+        color: AppTheme.greyAccent.withValues(alpha: 0.25),
         child: Icon(Icons.delete_outline, color: AppTheme.greyAccent),
       ),
       child: Column(
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: ValueListenableBuilder<TextEditingValue>(
-              valueListenable: _steps[index],
-              builder: (context, value, _) {
-                final isMultiLine =
-                    value.text.contains('\n') || value.text.length > 40;
-                return Row(
-                  crossAxisAlignment: isMultiLine
-                      ? CrossAxisAlignment.start
-                      : CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 30,
-                      margin: EdgeInsets.only(
-                        right: 12,
-                        top: isMultiLine ? 0 : 0,
-                      ),
-                      child: Center(
-                        child: Text(
-                          (index + 1).toString().padLeft(2, '0'),
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                color: AppTheme.greyAccent,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 24,
-                              ),
-                        ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: 40,
+                  height: 30,
+                  child: Center(
+                    child: Text(
+                      (index + 1).toString().padLeft(2, '0'),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: AppTheme.greyAccent,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 24,
                       ),
                     ),
-                    Expanded(
-                      child: TextField(
-                        controller: _steps[index],
-                        maxLines: null,
-                        minLines: 1,
-                        keyboardType: TextInputType.multiline,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                        decoration: InputDecoration(
-                          hintText: 'Insert your recipe step',
-                          hintStyle: Theme.of(context).textTheme.labelLarge,
-                          border: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          contentPadding: EdgeInsets.zero,
-                          isDense: true,
-                        ),
-                      ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextField(
+                    controller: _steps[index],
+                    maxLines: null,
+                    minLines: 1,
+                    keyboardType: TextInputType.multiline,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                    decoration: InputDecoration(
+                      hintText: 'Insert your recipe step',
+                      hintStyle: Theme.of(context).textTheme.labelLarge,
+                      border: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      contentPadding: EdgeInsets.zero,
+                      isDense: true,
                     ),
-                  ],
-                );
-              },
+                  ),
+                ),
+              ],
             ),
           ),
           if (index < _steps.length - 1)
@@ -673,10 +869,10 @@ class _AiParseScreenState extends State<AiParseScreen>
     );
   }
 
-  // ── Dashed "Add" button at the bottom of a card ───────────────────────────
+  // ── Dashed add button ─────────────────────────────────────────────────────
   Widget _buildDashedAddButton(String label, VoidCallback onTap) {
     return Padding(
-      padding: const EdgeInsets.only(left: 16.0, right: 16, bottom: 16, top: 0),
+      padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16, top: 0),
       child: DottedBorder(
         options: RoundedRectDottedBorderOptions(
           color: AppTheme.crossedOutGreen,
@@ -689,22 +885,17 @@ class _AiParseScreenState extends State<AiParseScreen>
           child: InkWell(
             onTap: onTap,
             borderRadius: BorderRadius.circular(8),
-            child: Container(
+            child: SizedBox(
               width: double.infinity,
               height: 48,
-              alignment: Alignment.center,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    label,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontSize: 16,
-                      color: AppTheme.crossedOutGreen,
-                    ),
+              child: Center(
+                child: Text(
+                  label,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontSize: 16,
+                    color: AppTheme.crossedOutGreen,
                   ),
-                ],
+                ),
               ),
             ),
           ),
