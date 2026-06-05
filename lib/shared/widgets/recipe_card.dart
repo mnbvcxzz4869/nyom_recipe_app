@@ -131,6 +131,7 @@ class RecipeCard extends StatelessWidget {
                             size: 16,
                             color: AppTheme.greyAccent,
                           ),
+                          SizedBox(width: 2,),
                           Text(
                             '${recipe.durationMinutes.toString()} Mins',
                             style: Theme.of(
@@ -141,7 +142,7 @@ class RecipeCard extends StatelessWidget {
                           // Cook Now button
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 4,
+                              horizontal: 6,
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
@@ -279,6 +280,7 @@ class RecipeCard extends StatelessWidget {
                         size: 16,
                         color: AppTheme.greyAccent,
                       ),
+                      SizedBox(width: 2,),
                       Text(
                         '${recipe.durationMinutes.toString()} Mins',
                         style: Theme.of(
@@ -435,6 +437,7 @@ class RecipeCard extends StatelessWidget {
                           size: 16,
                           color: AppTheme.greyAccent,
                         ),
+                        SizedBox(width: 2,),
                         Text(
                           '${recipe.durationMinutes.toString()} Mins',
                           style: Theme.of(
