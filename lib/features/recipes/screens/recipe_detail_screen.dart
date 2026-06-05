@@ -180,7 +180,7 @@ class _RecipeDetailBodyState extends State<_RecipeDetailBody> {
                   right: 16,
                   child: GestureDetector(
                     onTap: () =>
-                        context.push('/recipe-edit', extra: widget.recipe),
+                        context.push('/recipe-edit/${widget.recipe.id}', extra: widget.recipe), 
                     child: Container(
                       width: 36,
                       height: 36,

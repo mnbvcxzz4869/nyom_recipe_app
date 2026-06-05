@@ -43,7 +43,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // todayMealPlanProvider is always pinned to today — never affected by
     // the calendar date selection. Use valueOrNull so switching dates doesn't
     // flash a loading spinner; the previous data stays visible while refreshing.
-    final todayPlan = ref.watch(todayMealPlanProvider).value;
+    final todayPlan = ref
+        .watch(todayMealPlanProvider)
+        .value; // keep for hero card
+    final selectedPlan = ref.watch(mealPlanProvider).value;
     final recipesAsync = ref.watch(recipesProvider);
     final groceryAsync = ref.watch(groceryProvider);
 
@@ -64,7 +67,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               const SizedBox(height: 20),
 
               // ── Weekly planner summary ─────────────────────────────────
-              _buildWeeklyPlanner(todayPlan),
+              _buildWeeklyPlanner(selectedPlan),
               const SizedBox(height: 20),
 
               // ── Recipes feed ───────────────────────────────────────────
@@ -274,6 +277,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   activeWeekNumber: _selectedWeekNumber,
                   onWeekChanged: (newWeek) {
                     setState(() => _selectedWeekNumber = newWeek);
+
+                    // ← ADD THIS: compute the Monday of the selected week and set it
+                    final selectedMonday = _calendarBaseDate.add(
+                      Duration(days: (newWeek - 1) * 7),
+                    );
+                    final dateKey =
+                        '${selectedMonday.year}-${selectedMonday.month.toString().padLeft(2, '0')}-${selectedMonday.day.toString().padLeft(2, '0')}';
+                    ref.read(selectedDateProvider.notifier).setDate(dateKey);
                   },
                 ),
 

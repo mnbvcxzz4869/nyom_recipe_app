@@ -122,7 +122,9 @@ Deno.serve(async (req) => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        ...(mode !== "categorize" && {
+          system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        }),
         contents: [{ parts }],
         generationConfig: {
           temperature: 0.1,

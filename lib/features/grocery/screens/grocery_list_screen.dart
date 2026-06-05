@@ -37,13 +37,23 @@ class _GroceryListScreenState extends ConsumerState<GroceryListScreen> {
 
   int _selectedWeekNumber = 1;
 
+  bool _weekInitialized = false;
+
   @override
   void initState() {
     super.initState();
-    _selectedWeekNumber = _currentWeekNumber;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(selectedGroceryWeekProvider.notifier).state = _selectedWeekKey;
-    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_weekInitialized) {
+      _weekInitialized = true;
+      _selectedWeekNumber = _currentWeekNumber; // safe here — ref is available
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(selectedGroceryWeekProvider.notifier).state = _selectedWeekKey;
+      });
+    }
   }
 
   String get _selectedWeekKey {

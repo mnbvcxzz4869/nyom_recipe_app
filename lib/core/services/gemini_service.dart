@@ -39,24 +39,28 @@ class GeminiService {
       id: '',
       title: data['title'] as String,
       durationMinutes: data['duration_minutes'] as int,
-      imageUrl: data['image_url'] as String?,  // add this line
-      category: Category.values.byName((data['category'] as String).toLowerCase()),
+      imageUrl: data['image_url'] as String?, // add this line
+      category: Category.values.byName(
+        (data['category'] as String).toLowerCase(),
+      ),
       ingredients: ingredients,
       steps: List<String>.from(data['steps'] ?? []),
     );
   }
 
   Future<Map<String, String>> categorizeIngredients(List<String> names) async {
-  final response = await _client.functions.invoke(
-    'parse-recipe',
-    body: {'mode': 'categorize', 'input': jsonEncode(names)},
-  );
+    final response = await _client.functions.invoke(
+      'parse-recipe',
+      body: {'mode': 'categorize', 'input': jsonEncode(names)},
+    );
 
-  if (response.status != 200) {
-    throw Exception('Failed to categorize ingredients');
+    if (response.status != 200) {
+      throw Exception('Failed to categorize ingredients');
+    }
+
+    final data = response.data as Map<String, dynamic>;
+    return data.map(
+      (key, value) => MapEntry(key, value?.toString() ?? 'pantry'),
+    );
   }
-
-  final data = response.data as Map<String, dynamic>;
-  return data.map((key, value) => MapEntry(key, value as String));
-}
 }

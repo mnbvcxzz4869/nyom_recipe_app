@@ -233,8 +233,13 @@ class _AiParseScreenState extends ConsumerState<AiParseScreen>
       categories = await ref
           .read(geminiServiceProvider)
           .categorizeIngredients(names);
-    } catch (_) {
-      // categorization is best-effort — fall through with empty map
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Categorize error: $e')));
+      }
+      return; 
     }
 
     final ingredients = rawIngredients.map((e) {

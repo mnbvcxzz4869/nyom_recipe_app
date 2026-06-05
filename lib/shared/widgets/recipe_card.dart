@@ -131,17 +131,18 @@ class RecipeCard extends StatelessWidget {
                             size: 16,
                             color: AppTheme.greyAccent,
                           ),
-                          const SizedBox(width: 4),
                           Text(
-                            '${recipe.durationMinutes} Min',
-                            style: Theme.of(context).textTheme.bodySmall,
+                            '${recipe.durationMinutes.toString()} Mins',
+                            style: Theme.of(
+                              context,
+                            ).textTheme.bodySmall?.copyWith(fontSize: 12),
                           ),
                           const Spacer(),
                           // Cook Now button
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 8,
+                              horizontal: 4,
+                              vertical: 4,
                             ),
                             decoration: BoxDecoration(
                               color: AppTheme.warmYellow,
@@ -153,6 +154,7 @@ class RecipeCard extends StatelessWidget {
                                   ?.copyWith(
                                     color: AppTheme.headingGreen,
                                     fontWeight: FontWeight.w600,
+                                    fontSize: 12,
                                   ),
                             ),
                           ),
@@ -277,7 +279,6 @@ class RecipeCard extends StatelessWidget {
                         size: 16,
                         color: AppTheme.greyAccent,
                       ),
-                      const SizedBox(width: 4),
                       Text(
                         '${recipe.durationMinutes.toString()} Mins',
                         style: Theme.of(
@@ -434,7 +435,6 @@ class RecipeCard extends StatelessWidget {
                           size: 16,
                           color: AppTheme.greyAccent,
                         ),
-                        const SizedBox(width: 4),
                         Text(
                           '${recipe.durationMinutes.toString()} Mins',
                           style: Theme.of(
