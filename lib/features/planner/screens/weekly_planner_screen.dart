@@ -135,7 +135,7 @@ class _WeeklyPlannerScreenState extends ConsumerState<WeeklyPlannerScreen> {
                 padding: const EdgeInsets.only(
                   left: 16,
                   right: 16,
-                  top: 24,
+                  top: 4,
                   bottom: 16,
                 ),
                 child: Text(

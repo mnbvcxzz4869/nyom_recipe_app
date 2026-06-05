@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../features/recipes/models/recipe.dart';
 import '../../features/recipes/models/ingredient_item.dart';
@@ -35,13 +36,27 @@ class GeminiService {
         .toList();
 
     return Recipe(
-      id: '', // will be assigned by Supabase on save
+      id: '',
       title: data['title'] as String,
       durationMinutes: data['duration_minutes'] as int,
-      category: Category.values.byName(
-          (data['category'] as String).toLowerCase()),
+      imageUrl: data['image_url'] as String?,  // add this line
+      category: Category.values.byName((data['category'] as String).toLowerCase()),
       ingredients: ingredients,
       steps: List<String>.from(data['steps'] ?? []),
     );
   }
+
+  Future<Map<String, String>> categorizeIngredients(List<String> names) async {
+  final response = await _client.functions.invoke(
+    'parse-recipe',
+    body: {'mode': 'categorize', 'input': jsonEncode(names)},
+  );
+
+  if (response.status != 200) {
+    throw Exception('Failed to categorize ingredients');
+  }
+
+  final data = response.data as Map<String, dynamic>;
+  return data.map((key, value) => MapEntry(key, value as String));
+}
 }

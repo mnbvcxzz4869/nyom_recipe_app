@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:nyom_recipe_app/features/auth/providers/auth_provider.dart';
-import 'package:nyom_recipe_app/features/auth/providers/auth_provider.dart';
 import 'package:nyom_recipe_app/features/grocery/models/grocery_item.dart';
 import 'package:nyom_recipe_app/features/grocery/providers/grocery_provider.dart';
 import 'package:nyom_recipe_app/features/planner/models/meal_plan.dart';
@@ -104,7 +103,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final currentUserAsync = ref.watch(currentUserProvider);
 
     return Padding(
-      padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 16),
+      padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -179,6 +178,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         type: RecipeCardType.heroActive,
         recipe: plannedRecipe,
         slotLabel: slotLabel,
+        onTap: plannedRecipe != null
+            ? () => context.push('/recipe-detail/${plannedRecipe.id}')
+            : null,
       ),
     );
   }

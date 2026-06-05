@@ -1,5 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
+import 'package:flutter_riverpod/misc.dart';
 import 'package:nyom_recipe_app/features/recipes/models/recipe.dart';
+import 'package:nyom_recipe_app/shared/utils/week_key.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/grocery_item.dart';
 import '../repositories/grocery_repository.dart';
@@ -8,15 +11,25 @@ final groceryRepositoryProvider = Provider(
   (ref) => GroceryRepository(Supabase.instance.client),
 );
 
+final selectedGroceryWeekProvider = StateProvider<String>((ref) {
+  final now = DateTime.now();
+  final dateKey =
+      '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+  return isoWeekKey(dateKey);
+});
+
 final groceryProvider =
     AsyncNotifierProvider<GroceryNotifier, List<GroceryItem>>(
-      GroceryNotifier.new,
-    );
+  GroceryNotifier.new,
+);
+
 
 class GroceryNotifier extends AsyncNotifier<List<GroceryItem>> {
   @override
-  Future<List<GroceryItem>> build() =>
-      ref.read(groceryRepositoryProvider).fetchAll();
+  Future<List<GroceryItem>> build() {
+    final weekKey = ref.watch(selectedGroceryWeekProvider);
+    return ref.read(groceryRepositoryProvider).fetchAll(weekKey: weekKey);
+  }
 
   Future<void> toggle(String id, bool isBought) async {
     await ref.read(groceryRepositoryProvider).toggleBought(id, isBought);
@@ -44,7 +57,6 @@ class GroceryNotifier extends AsyncNotifier<List<GroceryItem>> {
     ref.invalidateSelf();
   }
 
-  /// Called after a meal is planned — bulk-adds the recipe's ingredients.
   Future<void> addFromRecipe({
     required Recipe recipe,
     required String weekKey,
@@ -55,8 +67,6 @@ class GroceryNotifier extends AsyncNotifier<List<GroceryItem>> {
     ref.invalidateSelf();
   }
 
-  /// Called after a meal is unplanned — removes only that recipe's rows
-  /// for the given week. Manual grocery items are never affected.
   Future<void> removeByRecipe({
     required String recipeId,
     required String weekKey,

@@ -32,13 +32,14 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
 
   List<Recipe> _applyFilters(List<Recipe> recipes) {
     return recipes.where((recipe) {
-      final matchesCategory = _selectedCategory == 'All' ||
-          recipe.category.name.toLowerCase() ==
-              _selectedCategory.toLowerCase();
-      final matchesSearch = _searchController.text.isEmpty ||
-          recipe.title
-              .toLowerCase()
-              .contains(_searchController.text.toLowerCase());
+      final matchesCategory =
+          _selectedCategory == 'All' ||
+          recipe.category.name.toLowerCase() == _selectedCategory.toLowerCase();
+      final matchesSearch =
+          _searchController.text.isEmpty ||
+          recipe.title.toLowerCase().contains(
+            _searchController.text.toLowerCase(),
+          );
       return matchesCategory && matchesSearch;
     }).toList();
   }
@@ -67,7 +68,7 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 24.0),
+                    const SizedBox(height: 4.0),
                     Text(
                       'My Recipes',
                       style: Theme.of(context).textTheme.headlineLarge,
@@ -111,8 +112,11 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.error_outline,
-                          size: 48, color: AppTheme.greyAccent),
+                      const Icon(
+                        Icons.error_outline,
+                        size: 48,
+                        color: AppTheme.greyAccent,
+                      ),
                       const SizedBox(height: 12),
                       Text(
                         'Failed to load recipes',
@@ -137,8 +141,11 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.menu_book_outlined,
-                              size: 56, color: AppTheme.greyAccent),
+                          const Icon(
+                            Icons.menu_book_outlined,
+                            size: 56,
+                            color: AppTheme.greyAccent,
+                          ),
                           const SizedBox(height: 12),
                           Text(
                             'No recipes yet',
@@ -147,9 +154,7 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
                           const SizedBox(height: 4),
                           Text(
                             'Tap + to add your first recipe',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
+                            style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(color: AppTheme.greyAccent),
                           ),
                         ],
@@ -164,8 +169,11 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.search_off_rounded,
-                              size: 56, color: AppTheme.greyAccent),
+                          const Icon(
+                            Icons.search_off_rounded,
+                            size: 56,
+                            color: AppTheme.greyAccent,
+                          ),
                           const SizedBox(height: 12),
                           Text(
                             'No matches found',
@@ -174,9 +182,7 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
                           const SizedBox(height: 4),
                           Text(
                             'Try a different search or category',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
+                            style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(color: AppTheme.greyAccent),
                           ),
                         ],
@@ -194,23 +200,20 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
                   sliver: SliverGrid(
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 16.0,
-                      crossAxisSpacing: 16.0,
-                      childAspectRatio: 0.65,
-                    ),
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final recipe = filtered[index];
-                        return RecipeCard(
-                          type: RecipeCardType.discoveryGrid,
-                          recipe: recipe,
-                          onTap: () =>
-                              context.push('/recipe-detail/${recipe.id}'),
-                        );
-                      },
-                      childCount: filtered.length,
-                    ),
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 16.0,
+                          crossAxisSpacing: 16.0,
+                          childAspectRatio: 0.65,
+                        ),
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final recipe = filtered[index];
+                      return RecipeCard(
+                        type: RecipeCardType.discoveryGrid,
+                        recipe: recipe,
+                        onTap: () =>
+                            context.push('/recipe-detail/${recipe.id}'),
+                      );
+                    }, childCount: filtered.length),
                   ),
                 );
               },

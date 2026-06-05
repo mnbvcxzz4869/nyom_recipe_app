@@ -17,33 +17,49 @@ Return ONLY valid JSON with no markdown, no backticks, no explanation. Exactly t
       "id": "i001",
       "name": "string",
       "quantity": "string",
-      "category": "produce" | "protein" | "dairy" | "pantry"
     }
   ],
   "steps": ["string"]
 }
 Rules:
-- Ingredient IDs: i001, i002, i003... 
+- If you cannot confidently extract a recipe from the input, return ONLY: {"error": "Could not extract recipe"}
+- Ingredient IDs: i001, i002, i003...
+- Ingredient names must always start with an uppercase letter (e.g. "Garlic cloves", not "garlic cloves")
 - Ingredient category is inferred from the name — never ask the user
-- duration_minutes is an integer
-- category must be one of the exact enum values listed
-- steps is an ordered array of plain strings`;
+- Each ingredient must be a single item — never combine two ingredients into one entry (e.g. never "Salt and pepper")
+- quantity must always include the unit (e.g. "2 cloves", "1 cup", "200g") — never a bare number
+- duration_minutes must be an integer — if it cannot be determined, default to 30
+- category must be one of the exact enum values listed — if ambiguous, pick the category of the most prominent ingredient
+- steps is an ordered array of plain strings
+- Each step must be a complete, actionable sentence — split compound actions into separate steps`;
 
 function isYouTubeUrl(url: string): boolean {
   return /^https?:\/\/(www\.)?(youtube\.com\/watch|youtu\.be\/)/.test(url);
 }
 
-async function fetchArticleContent(url: string): Promise<string> {
+function getYoutubeThumbnail(url: string): string | null {
+  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  return match ? `https://img.youtube.com/vi/${match[1]}/maxresdefault.jpg` : null;
+}
+
+async function fetchArticleContent(url: string): Promise<{ text: string; imageUrl: string | null }> {
   try {
     const response = await fetch(url);
     const html = await response.text();
-    return html
+
+    const ogImageMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
+      ?? html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+    const imageUrl = ogImageMatch?.[1] ?? null;
+
+    const text = html
       .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
       .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
       .replace(/<[^>]+>/g, " ")
       .replace(/\s+/g, " ")
       .trim()
       .slice(0, 8000);
+
+    return { text, imageUrl };
   } catch (err) {
     throw new Error(`Failed to fetch URL content: ${err.message}`);
   }
@@ -83,25 +99,22 @@ Deno.serve(async (req) => {
 
     // ── Build Gemini request parts based on mode ──────────────────────────
     let parts: object[];
+    let extractedImageUrl: string | null = null;
 
     if (mode === "url" && isYouTubeUrl(input)) {
-      // YouTube: pass directly as a fileData URI — Gemini fetches & understands it natively
+      extractedImageUrl = getYoutubeThumbnail(input); // ← add this
       parts = [
-        {
-          fileData: {
-            fileUri: input,
-          },
-        },
-        {
-          text: "Extract the recipe from this YouTube video and return it as JSON following the schema in your instructions.",
-        },
+        { fileData: { fileUri: input } },
+        { text: "Extract the recipe from this YouTube video and return it as JSON following the schema in your instructions." },
       ];
     } else if (mode === "url") {
-      // Regular article: scrape HTML and pass as text
-      const articleText = await fetchArticleContent(input);
-      parts = [{ text: articleText }];
+      const { text, imageUrl } = await fetchArticleContent(input);
+      extractedImageUrl = imageUrl;
+      parts = [{ text }];
+    } else if (mode === "categorize") {
+      const names = JSON.parse(input) as string[];
+      parts = [{ text: `Given these ingredient names, return ONLY a valid JSON object mapping each name to its category. Categories: "produce", "protein", "dairy", "pantry". No markdown, no explanation. Example: { "Garlic cloves": "produce", "Chicken breast": "protein" } Ingredients: ${JSON.stringify(names)}` }];
     } else {
-      // Plain text paste
       parts = [{ text: input }];
     }
 
@@ -137,10 +150,18 @@ Deno.serve(async (req) => {
     let recipe;
     try {
       recipe = JSON.parse(rawText);
+      recipe.image_url = extractedImageUrl; 
     } catch (parseErr) {
       return new Response(
         JSON.stringify({ error: "Gemini output failed JSON parsing", rawOutput: rawText, details: parseErr.message }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (recipe.error) {
+      return new Response(
+        JSON.stringify({ error: recipe.error }),
+        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 

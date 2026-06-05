@@ -4,6 +4,7 @@ import 'package:nyom_recipe_app/features/auth/providers/auth_provider.dart';
 import 'package:nyom_recipe_app/features/grocery/models/grocery_item.dart';
 import 'package:nyom_recipe_app/features/grocery/providers/grocery_provider.dart';
 import 'package:nyom_recipe_app/features/recipes/models/ingredient_item.dart';
+import 'package:nyom_recipe_app/shared/utils/week_key.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/weekly_calendar_strip.dart';
 import '../widgets/grocery_progress_card.dart';
@@ -35,6 +36,25 @@ class _GroceryListScreenState extends ConsumerState<GroceryListScreen> {
   int get _maxWeekNumber => _currentWeekNumber + 2;
 
   int _selectedWeekNumber = 1;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedWeekNumber = _currentWeekNumber;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(selectedGroceryWeekProvider.notifier).state = _selectedWeekKey;
+    });
+  }
+
+  String get _selectedWeekKey {
+    final base = _calendarBaseDate;
+    final selectedMonday = base.add(
+      Duration(days: (_selectedWeekNumber - 1) * 7),
+    );
+    final dateKey =
+        '${selectedMonday.year}-${selectedMonday.month.toString().padLeft(2, '0')}-${selectedMonday.day.toString().padLeft(2, '0')}';
+    return isoWeekKey(dateKey);
+  }
 
   Map<String, List<GroceryItem>> _grouped(List<GroceryItem> items) {
     final map = <String, List<GroceryItem>>{};
@@ -119,7 +139,7 @@ class _GroceryListScreenState extends ConsumerState<GroceryListScreen> {
                 padding: const EdgeInsets.only(
                   left: 16.0,
                   right: 16.0,
-                  top: 24.0,
+                  top: 4.0,
                   bottom: 8.0,
                 ),
                 child: Text(
@@ -141,6 +161,8 @@ class _GroceryListScreenState extends ConsumerState<GroceryListScreen> {
                   activeWeekNumber: _selectedWeekNumber,
                   onWeekChanged: (newWeek) {
                     setState(() => _selectedWeekNumber = newWeek);
+                    ref.read(selectedGroceryWeekProvider.notifier).state =
+                        _selectedWeekKey;
                   },
                   minWeekNumber: _minWeekNumber,
                   maxWeekNumber: _maxWeekNumber,

@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +11,7 @@ import 'package:nyom_recipe_app/features/recipes/models/recipe.dart';
 import 'package:nyom_recipe_app/features/recipes/providers/recipe_provider.dart';
 import 'package:nyom_recipe_app/features/recipes/screens/recipe_detail_screen.dart';
 import 'package:nyom_recipe_app/shared/widgets/custom_text_field.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/custom_button.dart';
 
@@ -29,11 +33,14 @@ class _IngredientEntry {
 // ─── Screen ──────────────────────────────────────────────────────────────────
 class AiParseScreen extends ConsumerStatefulWidget {
   final Recipe? initialRecipe;
-  const AiParseScreen({super.key, this.initialRecipe});
+  const AiParseScreen({super.key, this.initialRecipe, required recipeId});
 
   @override
   ConsumerState<AiParseScreen> createState() => _AiParseScreenState();
 }
+
+File? _pickedImage;
+String? _uploadedImageUrl;
 
 class _AiParseScreenState extends ConsumerState<AiParseScreen>
     with SingleTickerProviderStateMixin {
@@ -100,6 +107,8 @@ class _AiParseScreenState extends ConsumerState<AiParseScreen>
       _manualTitleController.text = recipe.title;
       _manualTimeController.text = recipe.durationMinutes.toString();
       _selectedCategory = recipe.category.label;
+      _pickedImage = null;
+      _uploadedImageUrl = recipe.imageUrl;
 
       // ── Ingredients: reuse existing controllers, add/remove rows as needed ──
       final newIngredients = recipe.ingredients.isEmpty
@@ -211,21 +220,56 @@ class _AiParseScreenState extends ConsumerState<AiParseScreen>
       category = Category.values.first;
     }
 
-    final ingredients = _ingredients
+    final rawIngredients = _ingredients
         .where((e) => e.nameController.text.trim().isNotEmpty)
-        .map(
-          (e) => IngredientItem(
-            id: _uuid.v4(),
-            name: e.nameController.text.trim(),
-            quantity: e.qtyController.text.trim(),
-          ),
-        )
         .toList();
+
+    final names = rawIngredients
+        .map((e) => _capitalize(e.nameController.text.trim()))
+        .toList();
+
+    Map<String, String> categories = {};
+    try {
+      categories = await ref
+          .read(geminiServiceProvider)
+          .categorizeIngredients(names);
+    } catch (_) {
+      // categorization is best-effort — fall through with empty map
+    }
+
+    final ingredients = rawIngredients.map((e) {
+      final name = _capitalize(e.nameController.text.trim());
+      return IngredientItem(
+        id: _uuid.v4(),
+        name: name,
+        quantity: e.qtyController.text.trim(),
+        category: IngredientCategory.values.byName(
+          categories[name] ?? 'pantry',
+        ),
+      );
+    }).toList();
 
     final steps = _steps
         .map((c) => c.text.trim())
         .where((s) => s.isNotEmpty)
         .toList();
+
+    String? finalImageUrl = _uploadedImageUrl;
+    if (_pickedImage != null) {
+      try {
+        final supabase = Supabase.instance.client;
+        final fileName = '${_uuid.v4()}.jpg';
+        await supabase.storage
+            .from('recipe-images')
+            .upload(fileName, _pickedImage!);
+        finalImageUrl = supabase.storage
+            .from('recipe-images')
+            .getPublicUrl(fileName);
+      } catch (e) {
+        debugPrint('Image upload failed: $e');
+        // non-critical — save without image
+      }
+    }
 
     final recipe = Recipe(
       id: _editingId ?? '',
@@ -234,9 +278,11 @@ class _AiParseScreenState extends ConsumerState<AiParseScreen>
       category: category,
       ingredients: ingredients,
       steps: steps,
+      imageUrl: finalImageUrl, // add this
     );
 
     setState(() => _isSaving = true);
+
     try {
       if (_editingId != null && _editingId!.isNotEmpty) {
         await ref.read(recipesProvider.notifier).edit(recipe);
@@ -259,6 +305,16 @@ class _AiParseScreenState extends ConsumerState<AiParseScreen>
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
+  }
+
+  Future<void> _handlePickImage() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
+    if (picked == null) return;
+    setState(() => _pickedImage = File(picked.path));
   }
 
   // ─── Ingredient helpers ───────────────────────────────────────────────────
@@ -291,7 +347,7 @@ class _AiParseScreenState extends ConsumerState<AiParseScreen>
           children: [
             Padding(
               padding: const EdgeInsets.only(
-                top: 16,
+                top: 0,
                 bottom: 4,
                 left: 8,
                 right: 8,
@@ -592,11 +648,21 @@ class _AiParseScreenState extends ConsumerState<AiParseScreen>
                               Icons.keyboard_arrow_down_rounded,
                               color: AppTheme.greyAccent,
                             ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium, // fixes selected value color + font
+                            dropdownColor: AppTheme
+                                .cardWhite, // fixes dropdown menu background
                             items: _categories
                                 .map(
                                   (c) => DropdownMenuItem(
                                     value: c,
-                                    child: Text(c),
+                                    child: Text(
+                                      c,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium, // fixes each option
+                                    ),
                                   ),
                                 )
                                 .toList(),
@@ -670,43 +736,69 @@ class _AiParseScreenState extends ConsumerState<AiParseScreen>
             elevation: 2,
             borderRadius: BorderRadius.circular(8),
             color: Colors.transparent,
-            child: DottedBorder(
-              options: RoundedRectDottedBorderOptions(
-                color: AppTheme.crossedOutGreen,
-                strokeWidth: 1,
-                radius: const Radius.circular(8),
-                dashPattern: const [6, 2],
-              ),
-              child: Container(
-                height: 120,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: AppTheme.cardWhite,
-                  borderRadius: BorderRadius.circular(8),
+            child: GestureDetector(
+              onTap: _handlePickImage,
+              child: DottedBorder(
+                options: RoundedRectDottedBorderOptions(
+                  color: AppTheme.crossedOutGreen,
+                  strokeWidth: 1,
+                  radius: const Radius.circular(8),
+                  dashPattern: const [6, 2],
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.add_photo_alternate_outlined,
-                      size: 32,
-                      color: AppTheme.greyAccent,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Add a photo',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontSize: 16,
-                        color: AppTheme.greyAccent,
-                      ),
-                    ),
-                    Text(
-                      'Tap to upload or take a picture',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodySmall?.copyWith(fontSize: 12),
-                    ),
-                  ],
+                child: Container(
+                  height: 120,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: AppTheme.cardWhite,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: _pickedImage != null
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.file(_pickedImage!, fit: BoxFit.cover),
+                        )
+                      : _uploadedImageUrl != null
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: CachedNetworkImage(
+                            imageUrl: _uploadedImageUrl!,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: double.infinity,
+                            placeholder: (context, url) => const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                            errorWidget: (context, url, error) => const Icon(
+                              Icons.broken_image,
+                              color: AppTheme.greyAccent,
+                            ),
+                          ),
+                        )
+                      : Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.add_photo_alternate_outlined,
+                              size: 32,
+                              color: AppTheme.greyAccent,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Add a photo',
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(
+                                    fontSize: 16,
+                                    color: AppTheme.greyAccent,
+                                  ),
+                            ),
+                            Text(
+                              'Tap to upload or take a picture',
+                              style: Theme.of(
+                                context,
+                              ).textTheme.bodySmall?.copyWith(fontSize: 12),
+                            ),
+                          ],
+                        ),
                 ),
               ),
             ),
@@ -903,4 +995,7 @@ class _AiParseScreenState extends ConsumerState<AiParseScreen>
       ),
     );
   }
+
+  String _capitalize(String s) =>
+      s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
 }

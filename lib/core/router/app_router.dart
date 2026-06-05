@@ -6,7 +6,6 @@ import 'package:nyom_recipe_app/features/grocery/screens/grocery_list_screen.dar
 import 'package:nyom_recipe_app/features/home/screens/home_screen.dart';
 import 'package:nyom_recipe_app/features/recipes/screens/ai_parse_screen.dart';
 import 'package:nyom_recipe_app/features/recipes/screens/recipe_detail_screen.dart';
-import 'package:nyom_recipe_app/features/recipes/screens/recipe_detail_screen.dart';
 import 'package:nyom_recipe_app/features/recipes/models/recipe.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/register_screen.dart';
@@ -83,15 +82,16 @@ final appRouter = GoRouter(
       path: '/ai-parse',
       parentNavigatorKey:
           _rootNavigatorKey, // Overlay modal sheet on top of everything
-      builder: (context, state) => const AiParseScreen(),
+      builder: (context, state) => const AiParseScreen(recipeId: null),
     ),
 
     GoRoute(
-      path: '/recipe-edit',
+      path: '/recipe-edit/:id',
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) {
+        final id = state.pathParameters['id']!;
         final recipe = state.extra as Recipe?;
-        return AiParseScreen(initialRecipe: recipe);
+        return AiParseScreen(initialRecipe: recipe, recipeId: id);
       },
     ),
 

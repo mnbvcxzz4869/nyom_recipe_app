@@ -1,11 +1,12 @@
+import '../../../core/theme/app_theme.dart';
+import '../models/recipe.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nyom_recipe_app/features/grocery/models/grocery_item.dart';
 import 'package:nyom_recipe_app/features/recipes/providers/recipe_provider.dart';
 import 'package:nyom_recipe_app/shared/widgets/grocery_checkbox_tile.dart';
-import '../../../core/theme/app_theme.dart';
-import '../models/recipe.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 // ---------------------------------------------------------------------------
 // Per-ID provider — thin wrapper around the repository
@@ -121,9 +122,25 @@ class _RecipeDetailBodyState extends State<_RecipeDetailBody> {
                       width: screenWidth,
                       height: screenWidth,
                       child: widget.recipe.imageUrl != null
-                          ? Image.network(
-                              widget.recipe.imageUrl!,
+                          ? CachedNetworkImage(
+                              imageUrl: widget.recipe.imageUrl!,
                               fit: BoxFit.cover,
+                              placeholder: (context, url) => Container(
+                                color: AppTheme.baseBackground,
+                                child: const Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              ),
+                              errorWidget: (context, url, error) => Container(
+                                color: AppTheme.headingGreen,
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.restaurant_menu_rounded,
+                                    size: 64,
+                                    color: AppTheme.warmYellow,
+                                  ),
+                                ),
+                              ),
                             )
                           : Container(
                               color: AppTheme.headingGreen,
@@ -139,7 +156,7 @@ class _RecipeDetailBodyState extends State<_RecipeDetailBody> {
                   ),
                 ),
                 Positioned(
-                  top: topPadding + 24,
+                  top: topPadding + 4,
                   left: 16,
                   child: GestureDetector(
                     onTap: () => Navigator.pop(context),
@@ -159,7 +176,7 @@ class _RecipeDetailBodyState extends State<_RecipeDetailBody> {
                   ),
                 ),
                 Positioned(
-                  top: topPadding + 24,
+                  top: topPadding + 4,
                   right: 16,
                   child: GestureDetector(
                     onTap: () =>

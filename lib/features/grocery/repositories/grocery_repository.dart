@@ -6,12 +6,13 @@ class GroceryRepository {
   final SupabaseClient _client;
   GroceryRepository(this._client);
 
-  Future<List<GroceryItem>> fetchAll() async {
+  Future<List<GroceryItem>> fetchAll({required String weekKey}) async {
     final userId = _client.auth.currentUser!.id;
     final response = await _client
         .from('grocery_items')
         .select()
         .eq('user_id', userId)
+        .or('week_key.eq.$weekKey,week_key.is.null')
         .order('created_at', ascending: true);
     return (response as List).map((e) => GroceryItem.fromJson(e)).toList();
   }

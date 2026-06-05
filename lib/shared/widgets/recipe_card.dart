@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:nyom_recipe_app/features/recipes/models/recipe.dart';
 import '../../core/theme/app_theme.dart';
@@ -56,7 +57,26 @@ class RecipeCard extends StatelessWidget {
                   width: 160,
                   height: 160,
                   child: recipe.imageUrl != null
-                      ? Image.network(recipe.imageUrl!, fit: BoxFit.cover)
+                      ? CachedNetworkImage(
+                          imageUrl: recipe.imageUrl!,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Container(
+                            color: AppTheme.baseBackground,
+                            child: const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            color: AppTheme.headingGreen,
+                            child: const Center(
+                              child: Icon(
+                                Icons.restaurant_menu_rounded,
+                                size: 64,
+                                color: AppTheme.warmYellow,
+                              ),
+                            ),
+                          ),
+                        )
                       : Container(
                           color: AppTheme.baseBackground,
                           child: const Icon(
@@ -196,20 +216,37 @@ class RecipeCard extends StatelessWidget {
           children: [
             // 1. ELEVATED LEFT THUMBNAIL IMAGE FRAME
             Material(
-              elevation: 1, // Layered inside the card frame
+              elevation: 1,
               borderRadius: BorderRadius.circular(8),
               clipBehavior: Clip.antiAlias,
-              child: Container(
+              child: SizedBox(
                 width: 64,
                 height: 64,
-                color: AppTheme.baseBackground,
-                child: const Center(
-                  child: Icon(
-                    Icons.image_outlined,
-                    color: AppTheme.greyAccent,
-                    size: 22,
-                  ),
-                ),
+                child: recipe.imageUrl != null
+                    ? CachedNetworkImage(
+                        imageUrl: recipe.imageUrl!,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) =>
+                            Container(color: AppTheme.baseBackground),
+                        errorWidget: (context, url, error) => Container(
+                          color: AppTheme.baseBackground,
+                          child: const Icon(
+                            Icons.restaurant_rounded,
+                            color: AppTheme.greyAccent,
+                            size: 22,
+                          ),
+                        ),
+                      )
+                    : Container(
+                        color: AppTheme.baseBackground,
+                        child: const Center(
+                          child: Icon(
+                            Icons.image_outlined,
+                            color: AppTheme.greyAccent,
+                            size: 22,
+                          ),
+                        ),
+                      ),
               ),
             ),
 
@@ -307,18 +344,37 @@ class RecipeCard extends StatelessWidget {
                 clipBehavior: Clip.antiAlias,
                 child: Stack(
                   children: [
-                    Container(
-                      color: AppTheme.baseBackground,
-                      width: double.infinity,
-                      height: double.infinity,
-                      child: const Center(
-                        child: Icon(
-                          Icons.image_outlined,
-                          color: AppTheme.greyAccent,
-                          size: 28,
-                        ),
-                      ),
-                    ),
+                    recipe.imageUrl != null
+                        ? CachedNetworkImage(
+                            imageUrl: recipe.imageUrl!,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: double.infinity,
+                            placeholder: (context, url) =>
+                                Container(color: AppTheme.baseBackground),
+                            errorWidget: (context, url, error) => Container(
+                              color: AppTheme.baseBackground,
+                              child: const Center(
+                                child: Icon(
+                                  Icons.image_outlined,
+                                  color: AppTheme.greyAccent,
+                                  size: 28,
+                                ),
+                              ),
+                            ),
+                          )
+                        : Container(
+                            color: AppTheme.baseBackground,
+                            width: double.infinity,
+                            height: double.infinity,
+                            child: const Center(
+                              child: Icon(
+                                Icons.image_outlined,
+                                color: AppTheme.greyAccent,
+                                size: 28,
+                              ),
+                            ),
+                          ),
 
                     // FLOATING CATEGORY BADGE (Ditimpa on top-left)
                     Positioned(
