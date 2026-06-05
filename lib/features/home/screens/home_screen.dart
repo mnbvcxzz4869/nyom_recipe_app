@@ -277,13 +277,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   activeWeekNumber: _selectedWeekNumber,
                   onWeekChanged: (newWeek) {
                     setState(() => _selectedWeekNumber = newWeek);
-
-                    // ← ADD THIS: compute the Monday of the selected week and set it
                     final selectedMonday = _calendarBaseDate.add(
                       Duration(days: (newWeek - 1) * 7),
                     );
                     final dateKey =
                         '${selectedMonday.year}-${selectedMonday.month.toString().padLeft(2, '0')}-${selectedMonday.day.toString().padLeft(2, '0')}';
+                    ref.read(selectedDateProvider.notifier).setDate(dateKey);
+                  },
+                  onDateChanged: (selectedDate) {
+                    // ← ADD THIS
+                    final dateKey =
+                        '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}';
                     ref.read(selectedDateProvider.notifier).setDate(dateKey);
                   },
                 ),
