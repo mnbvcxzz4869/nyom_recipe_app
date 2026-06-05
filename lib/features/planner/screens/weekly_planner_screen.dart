@@ -101,16 +101,15 @@ class _WeeklyPlannerScreenState extends ConsumerState<WeeklyPlannerScreen> {
 
   Future<void> _removeMeal(String mealType, String recipeId) async {
     final key = mealType.toLowerCase();
-    // Optimistically hide the card immediately
     setState(() => _dismissed[key]!.add(recipeId));
     try {
       await ref.read(mealPlanProvider.notifier).removeMeal(key, recipeId);
-      // Provider will rebuild with the real list — clear dismissed set
-      if (mounted) setState(() => _dismissed[key]!.remove(recipeId));
+      // ← remove the setState here, provider rebuild handles it
     } catch (_) {
-      // Restore card if delete failed
       if (mounted) {
-        setState(() => _dismissed[key]!.remove(recipeId));
+        setState(
+          () => _dismissed[key]!.remove(recipeId),
+        ); // only restore on failure
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Failed to remove meal. Try again.')),
         );
