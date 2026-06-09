@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nyom_recipe_app/features/recipes/repositories/recipe_repository,.dart';
+import 'package:nyom_recipe_app/features/recipes/repositories/recipe_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/recipe.dart';
 

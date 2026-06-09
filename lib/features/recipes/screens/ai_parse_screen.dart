@@ -9,6 +9,7 @@ import 'package:nyom_recipe_app/core/services/supabase_service.dart';
 import 'package:nyom_recipe_app/features/recipes/models/ingredient_item.dart';
 import 'package:nyom_recipe_app/features/recipes/models/recipe.dart';
 import 'package:nyom_recipe_app/features/recipes/providers/recipe_provider.dart';
+import 'package:nyom_recipe_app/core/constants/app_constants.dart';
 import 'package:nyom_recipe_app/shared/widgets/custom_text_field.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/theme/app_theme.dart';
@@ -38,12 +39,12 @@ class AiParseScreen extends ConsumerStatefulWidget {
   ConsumerState<AiParseScreen> createState() => _AiParseScreenState();
 }
 
-File? _pickedImage;
-String? _uploadedImageUrl;
-
 class _AiParseScreenState extends ConsumerState<AiParseScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+
+  File? _pickedImage;
+  String? _uploadedImageUrl;
 
   // Tab 1 — AI Parse
   final _textInputController = TextEditingController();
@@ -63,15 +64,7 @@ class _AiParseScreenState extends ConsumerState<AiParseScreen>
   List<_IngredientEntry> _ingredients = [_IngredientEntry()];
   List<TextEditingController> _steps = [TextEditingController()];
 
-  final List<String> _categories = [
-    'Rice',
-    'Noodle',
-    'Meat',
-    'Seafood',
-    'Vegetables',
-    'Snacks',
-    'Desserts',
-  ];
+  final List<String> _categories = AppConstants.recipeCategories;
 
   static const _uuid = Uuid();
   String? _editingId;
@@ -238,7 +231,7 @@ class _AiParseScreenState extends ConsumerState<AiParseScreen>
           context,
         ).showSnackBar(SnackBar(content: Text('Categorize error: $e')));
       }
-      return; 
+      return;
     }
 
     final ingredients = rawIngredients.map((e) {

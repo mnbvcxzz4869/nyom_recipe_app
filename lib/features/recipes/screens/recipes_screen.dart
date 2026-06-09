@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nyom_recipe_app/features/recipes/models/recipe.dart';
 import 'package:nyom_recipe_app/features/recipes/providers/recipe_provider.dart';
+import 'package:nyom_recipe_app/shared/widgets/recipe_card/discovery_recipe_card.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../shared/widgets/recipe_card.dart';
 import '../../../shared/widgets/recipe_search_bar.dart';
 import '../../../shared/widgets/recipe_filter_chips.dart';
 
@@ -207,8 +207,7 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
                         ),
                     delegate: SliverChildBuilderDelegate((context, index) {
                       final recipe = filtered[index];
-                      return RecipeCard(
-                        type: RecipeCardType.discoveryGrid,
+                      return DiscoveryRecipeCard(
                         recipe: recipe,
                         onTap: () =>
                             context.push('/recipe-detail/${recipe.id}'),

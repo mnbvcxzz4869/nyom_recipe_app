@@ -7,8 +7,8 @@ import 'package:nyom_recipe_app/features/planner/models/meal_plan.dart';
 import 'package:nyom_recipe_app/features/planner/providers/planner_provider.dart';
 import 'package:nyom_recipe_app/features/recipes/models/recipe.dart';
 import 'package:nyom_recipe_app/features/recipes/providers/recipe_provider.dart';
+import 'package:nyom_recipe_app/shared/widgets/recipe_card/meal_planner_recipe_card.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../shared/widgets/recipe_card.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/weekly_calendar_strip.dart';
 import '../../../shared/widgets/recipe_search_bar.dart';
@@ -25,19 +25,7 @@ class WeeklyPlannerScreen extends ConsumerStatefulWidget {
 class _WeeklyPlannerScreenState extends ConsumerState<WeeklyPlannerScreen> {
   // baseDate comes from the user's signup date (Week 1 anchor).
   // Falls back to the Monday of the current week while loading.
-  int _selectedWeekNumber = 1;
-
-  @override
-  void initState() {
-    super.initState();
-    // Start on the current week, not week 1, so the user lands on today.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted)
-        setState(
-          () => _selectedWeekNumber = ref.read(currentWeekNumberProvider),
-        );
-    });
-  }
+  int? _selectedWeekNumber;
 
   // Tracks optimistically dismissed recipe IDs per meal type
   final Map<String, Set<String>> _dismissed = {
@@ -49,7 +37,7 @@ class _WeeklyPlannerScreenState extends ConsumerState<WeeklyPlannerScreen> {
   String _dateKey(DateTime d) => DateFormat('yyyy-MM-dd').format(d);
 
   void _onDateChanged(DateTime newDate) {
-    ref.read(selectedDateProvider.notifier).setDate(_dateKey(newDate));
+    ref.read(plannerSelectedDateProvider.notifier).setDate(_dateKey(newDate));
   }
 
   // ── Recipe Picker Bottom Sheet ────────────────────────────────────────────
@@ -73,7 +61,7 @@ class _WeeklyPlannerScreenState extends ConsumerState<WeeklyPlannerScreen> {
     if (selected != null) {
       try {
         await ref
-            .read(mealPlanProvider.notifier)
+            .read(plannerMealPlanProvider.notifier)
             .addMeal(mealType.toLowerCase(), selected.id);
       } catch (_) {
         if (mounted) {
@@ -85,17 +73,19 @@ class _WeeklyPlannerScreenState extends ConsumerState<WeeklyPlannerScreen> {
     }
   }
 
+  // AFTER — success path just does nothing, provider handles the UI
   Future<void> _removeMeal(String mealType, String recipeId) async {
     final key = mealType.toLowerCase();
     setState(() => _dismissed[key]!.add(recipeId));
     try {
-      await ref.read(mealPlanProvider.notifier).removeMeal(key, recipeId);
-      // ← remove the setState here, provider rebuild handles it
+      await ref
+          .read(plannerMealPlanProvider.notifier)
+          .removeMeal(key, recipeId);
+      if (mounted)
+        setState(() => _dismissed[key]!.remove(recipeId)); // ← add this back
     } catch (_) {
       if (mounted) {
-        setState(
-          () => _dismissed[key]!.remove(recipeId),
-        ); // only restore on failure
+        setState(() => _dismissed[key]!.remove(recipeId));
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Failed to remove meal. Try again.')),
         );
@@ -107,7 +97,19 @@ class _WeeklyPlannerScreenState extends ConsumerState<WeeklyPlannerScreen> {
   Widget build(BuildContext context) {
     final baseDate = ref.watch(calendarBaseDateProvider);
     final currentWeek = ref.watch(currentWeekNumberProvider);
-    final asyncPlan = ref.watch(mealPlanProvider);
+    final signupLoaded = ref.watch(userCreatedAtProvider).hasValue;
+    if (signupLoaded && _selectedWeekNumber == null) {
+      _selectedWeekNumber = currentWeek;
+    }
+    final effectiveWeek = _selectedWeekNumber ?? currentWeek;
+    final asyncPlan = ref.watch(plannerMealPlanProvider);
+    ref.listen(plannerSelectedDateProvider, (_, __) {
+      setState(() {
+        _dismissed['breakfast']!.clear();
+        _dismissed['lunch']!.clear();
+        _dismissed['dinner']!.clear();
+      });
+    });
     return Scaffold(
       backgroundColor: AppTheme.baseBackground,
       body: SafeArea(
@@ -137,7 +139,7 @@ class _WeeklyPlannerScreenState extends ConsumerState<WeeklyPlannerScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: WeeklyCalendarStrip(
                   baseDate: baseDate,
-                  activeWeekNumber: _selectedWeekNumber,
+                  activeWeekNumber: effectiveWeek,
                   showDayRow: true,
                   onWeekChanged: (newWeek) =>
                       setState(() => _selectedWeekNumber = newWeek),
@@ -171,7 +173,8 @@ class _WeeklyPlannerScreenState extends ConsumerState<WeeklyPlannerScreen> {
                       ),
                       const SizedBox(height: 8),
                       TextButton(
-                        onPressed: () => ref.invalidate(mealPlanProvider),
+                        onPressed: () =>
+                            ref.invalidate(plannerMealPlanProvider),
                         child: const Text('Retry'),
                       ),
                     ],
@@ -252,8 +255,7 @@ class _WeeklyPlannerScreenState extends ConsumerState<WeeklyPlannerScreen> {
                       color: AppTheme.greyAccent,
                     ),
                   ),
-                  child: RecipeCard(
-                    type: RecipeCardType.mealPlannerRow,
+                  child: MealPlannerRecipeCard(
                     recipe: recipe,
                     onTap: () => context.push('/recipe-detail/${recipe.id}'),
                   ),
@@ -364,8 +366,7 @@ class _RecipePickerSheetState extends State<_RecipePickerSheet> {
                           final recipe = _filtered[index];
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 10),
-                            child: RecipeCard(
-                              type: RecipeCardType.mealPlannerRow,
+                            child: MealPlannerRecipeCard(
                               recipe: recipe,
                               onTap: () => Navigator.pop(context, recipe),
                             ),
