@@ -11,7 +11,6 @@ import 'package:nyom_recipe_app/features/recipes/providers/recipe_provider.dart'
 import 'package:nyom_recipe_app/features/recipes/widgets/ai_parse_tab.dart';
 import 'package:nyom_recipe_app/features/recipes/widgets/ingredient_row.dart';
 import 'package:nyom_recipe_app/features/recipes/widgets/manual_recipe_tab.dart';
-import 'package:nyom_recipe_app/features/recipes/widgets/recipe_step_row.dart';
 import 'package:nyom_recipe_app/features/recipes/widgets/url_parse_tab.dart';
 import 'package:nyom_recipe_app/core/constants/app_constants.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -222,20 +221,11 @@ class _AiParseScreenState extends ConsumerState<AiParseScreen>
 
     String? finalImageUrl = _uploadedImageUrl;
     if (_pickedImage != null) {
-      try {
-        final supabase = Supabase.instance.client;
-        final fileName = '${_uuid.v4()}.jpg';
-        await supabase.storage
-            .from('recipe-images')
-            .upload(fileName, _pickedImage!);
-        finalImageUrl = supabase.storage
-            .from('recipe-images')
-            .getPublicUrl(fileName);
-      } catch (e) {
-        debugPrint('Image upload failed: $e');
-      }
+      finalImageUrl = await ref
+          .read(recipesProvider.notifier)
+          .uploadImage(_pickedImage!);
     }
-
+    
     final recipe = Recipe(
       id: _editingId ?? '',
       title: title,

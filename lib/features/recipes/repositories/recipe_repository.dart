@@ -1,4 +1,9 @@
+import 'dart:io';
+
+import 'package:nyom_recipe_app/core/constants/app_constants.dart';
+import 'package:nyom_recipe_app/core/errors/app_exceptions.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 import '../models/recipe.dart';
 
 class RecipeRepository {
@@ -26,10 +31,7 @@ class RecipeRepository {
     final userId = _client.auth.currentUser!.id;
     final response = await _client
         .from('recipes')
-        .insert({
-          ...recipe.toJson()..remove('id'),
-          'user_id': userId,
-        })
+        .insert({...recipe.toJson()..remove('id'), 'user_id': userId})
         .select()
         .single();
     return Recipe.fromJson(response);
@@ -47,5 +49,19 @@ class RecipeRepository {
 
   Future<void> delete(String id) async {
     await _client.from('recipes').delete().eq('id', id);
+  }
+
+  Future<String> uploadImage(File file) async {
+    final fileName = '${const Uuid().v4()}.jpg';
+    try {
+      await _client.storage
+          .from(AppConstants.recipeImagesBucket)
+          .upload(fileName, file);
+      return _client.storage
+          .from(AppConstants.recipeImagesBucket)
+          .getPublicUrl(fileName);
+    } catch (e) {
+      throw ImageUploadException(e.toString());
+    }
   }
 }
