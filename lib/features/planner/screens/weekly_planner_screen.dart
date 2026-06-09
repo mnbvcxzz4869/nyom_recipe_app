@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:nyom_recipe_app/features/auth/providers/auth_provider.dart';
-import 'package:nyom_recipe_app/features/planner/models/meal_plan.dart';
 import 'package:nyom_recipe_app/features/planner/providers/planner_provider.dart';
+import 'package:nyom_recipe_app/features/planner/widgets/meal_slot_section.dart';
+import 'package:nyom_recipe_app/features/planner/widgets/recipe_picker_sheet.dart';
 import 'package:nyom_recipe_app/features/recipes/models/recipe.dart';
 import 'package:nyom_recipe_app/features/recipes/providers/recipe_provider.dart';
-import 'package:nyom_recipe_app/shared/widgets/recipe_card/meal_planner_recipe_card.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/weekly_calendar_strip.dart';
-import '../../../shared/widgets/recipe_search_bar.dart';
 import 'package:nyom_recipe_app/core/providers/calendar_provider.dart';
 
 class WeeklyPlannerScreen extends ConsumerStatefulWidget {
@@ -23,11 +20,8 @@ class WeeklyPlannerScreen extends ConsumerStatefulWidget {
 }
 
 class _WeeklyPlannerScreenState extends ConsumerState<WeeklyPlannerScreen> {
-  // baseDate comes from the user's signup date (Week 1 anchor).
-  // Falls back to the Monday of the current week while loading.
   int? _selectedWeekNumber;
 
-  // Tracks optimistically dismissed recipe IDs per meal type
   final Map<String, Set<String>> _dismissed = {
     'breakfast': {},
     'lunch': {},
@@ -40,7 +34,6 @@ class _WeeklyPlannerScreenState extends ConsumerState<WeeklyPlannerScreen> {
     ref.read(plannerSelectedDateProvider.notifier).setDate(_dateKey(newDate));
   }
 
-  // ── Recipe Picker Bottom Sheet ────────────────────────────────────────────
   Future<void> _openRecipePicker(String mealType) async {
     final recipes = ref.read(recipesProvider).asData?.value ?? [];
 
@@ -55,7 +48,7 @@ class _WeeklyPlannerScreenState extends ConsumerState<WeeklyPlannerScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _RecipePickerSheet(recipes: recipes),
+      builder: (_) => RecipePickerSheet(recipes: recipes),
     );
 
     if (selected != null) {
@@ -73,7 +66,6 @@ class _WeeklyPlannerScreenState extends ConsumerState<WeeklyPlannerScreen> {
     }
   }
 
-  // AFTER — success path just does nothing, provider handles the UI
   Future<void> _removeMeal(String mealType, String recipeId) async {
     final key = mealType.toLowerCase();
     setState(() => _dismissed[key]!.add(recipeId));
@@ -81,8 +73,7 @@ class _WeeklyPlannerScreenState extends ConsumerState<WeeklyPlannerScreen> {
       await ref
           .read(plannerMealPlanProvider.notifier)
           .removeMeal(key, recipeId);
-      if (mounted)
-        setState(() => _dismissed[key]!.remove(recipeId)); // ← add this back
+      if (mounted) setState(() => _dismissed[key]!.remove(recipeId));
     } catch (_) {
       if (mounted) {
         setState(() => _dismissed[key]!.remove(recipeId));
@@ -110,6 +101,7 @@ class _WeeklyPlannerScreenState extends ConsumerState<WeeklyPlannerScreen> {
         _dismissed['dinner']!.clear();
       });
     });
+
     return Scaffold(
       backgroundColor: AppTheme.baseBackground,
       body: SafeArea(
@@ -117,23 +109,12 @@ class _WeeklyPlannerScreenState extends ConsumerState<WeeklyPlannerScreen> {
         child: CustomScrollView(
           clipBehavior: Clip.none,
           slivers: [
-            // ── Header ───────────────────────────────────────────────
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.only(
-                  left: 16,
-                  right: 16,
-                  top: 4,
-                  bottom: 16,
-                ),
-                child: Text(
-                  'Weekly Planner',
-                  style: Theme.of(context).textTheme.headlineLarge,
-                ),
+                padding: const EdgeInsets.only(left: 16, right: 16, top: 4, bottom: 16),
+                child: Text('Weekly Planner', style: Theme.of(context).textTheme.headlineLarge),
               ),
             ),
-
-            // ── Calendar strip ────────────────────────────────────────
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -141,60 +122,61 @@ class _WeeklyPlannerScreenState extends ConsumerState<WeeklyPlannerScreen> {
                   baseDate: baseDate,
                   activeWeekNumber: effectiveWeek,
                   showDayRow: true,
-                  onWeekChanged: (newWeek) =>
-                      setState(() => _selectedWeekNumber = newWeek),
+                  onWeekChanged: (newWeek) => setState(() => _selectedWeekNumber = newWeek),
                   onDateChanged: _onDateChanged,
                   minWeekNumber: (currentWeek - 2).clamp(1, currentWeek),
                   maxWeekNumber: currentWeek + 2,
                 ),
               ),
             ),
-
-            // ── Meal slots ────────────────────────────────────────────
             asyncPlan.when(
               loading: () => const SliverFillRemaining(
                 child: Center(child: CircularProgressIndicator()),
               ),
-
               error: (err, _) => SliverFillRemaining(
                 child: Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(
-                        Icons.error_outline,
-                        size: 48,
-                        color: AppTheme.greyAccent,
-                      ),
+                      const Icon(Icons.error_outline, size: 48, color: AppTheme.greyAccent),
                       const SizedBox(height: 12),
-                      Text(
-                        'Failed to load meal plan',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
+                      Text('Failed to load meal plan', style: Theme.of(context).textTheme.titleMedium),
                       const SizedBox(height: 8),
                       TextButton(
-                        onPressed: () =>
-                            ref.invalidate(plannerMealPlanProvider),
+                        onPressed: () => ref.invalidate(plannerMealPlanProvider),
                         child: const Text('Retry'),
                       ),
                     ],
                   ),
                 ),
               ),
-
               data: (plan) => SliverPadding(
-                padding: const EdgeInsets.only(
-                  left: 16,
-                  right: 16,
-                  bottom: 110,
-                ),
+                padding: const EdgeInsets.only(left: 16, right: 16, bottom: 110),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
-                    _buildMealSlot('Breakfast', plan.breakfast, plan),
+                    MealSlotSection(
+                      label: 'Breakfast',
+                      recipes: plan.breakfast,
+                      dismissed: _dismissed['breakfast']!,
+                      onAdd: () => _openRecipePicker('Breakfast'),
+                      onDismiss: (id) => _removeMeal('Breakfast', id),
+                    ),
                     const SizedBox(height: 8),
-                    _buildMealSlot('Lunch', plan.lunch, plan),
+                    MealSlotSection(
+                      label: 'Lunch',
+                      recipes: plan.lunch,
+                      dismissed: _dismissed['lunch']!,
+                      onAdd: () => _openRecipePicker('Lunch'),
+                      onDismiss: (id) => _removeMeal('Lunch', id),
+                    ),
                     const SizedBox(height: 8),
-                    _buildMealSlot('Dinner', plan.dinner, plan),
+                    MealSlotSection(
+                      label: 'Dinner',
+                      recipes: plan.dinner,
+                      dismissed: _dismissed['dinner']!,
+                      onAdd: () => _openRecipePicker('Dinner'),
+                      onDismiss: (id) => _removeMeal('Dinner', id),
+                    ),
                   ]),
                 ),
               ),
@@ -202,182 +184,6 @@ class _WeeklyPlannerScreenState extends ConsumerState<WeeklyPlannerScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildMealSlot(String label, List<Recipe> recipes, MealPlan plan) {
-    final key = label.toLowerCase();
-    final visible = recipes
-        .where((r) => !(_dismissed[key]?.contains(r.id) ?? false))
-        .toList();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(label, style: Theme.of(context).textTheme.titleMedium),
-            TextButton(
-              onPressed: () => _openRecipePicker(label),
-              style: TextButton.styleFrom(
-                foregroundColor: Theme.of(context).colorScheme.tertiary,
-              ),
-              child: const Text('+ Add'),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        if (visible.isEmpty)
-          CustomButton(
-            text: 'No $label planned — tap to add',
-            type: CustomButtonType.dashed,
-            onPressed: () => _openRecipePicker(label),
-          )
-        else
-          Column(
-            children: visible.map((recipe) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8.0),
-                child: Dismissible(
-                  key: ValueKey('${label}_${recipe.id}'),
-                  direction: DismissDirection.endToStart,
-                  onDismissed: (_) => _removeMeal(label, recipe.id),
-                  background: Container(
-                    alignment: Alignment.centerRight,
-                    padding: const EdgeInsets.only(right: 20),
-                    decoration: BoxDecoration(
-                      color: AppTheme.greyAccent.withValues(alpha: 0.25),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      Icons.delete_outline,
-                      color: AppTheme.greyAccent,
-                    ),
-                  ),
-                  child: MealPlannerRecipeCard(
-                    recipe: recipe,
-                    onTap: () => context.push('/recipe-detail/${recipe.id}'),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-      ],
-    );
-  }
-}
-
-// ── Recipe Picker Bottom Sheet ────────────────────────────────────────────────
-class _RecipePickerSheet extends StatefulWidget {
-  final List<Recipe> recipes;
-  const _RecipePickerSheet({required this.recipes});
-
-  @override
-  State<_RecipePickerSheet> createState() => _RecipePickerSheetState();
-}
-
-class _RecipePickerSheetState extends State<_RecipePickerSheet> {
-  final TextEditingController _search = TextEditingController();
-
-  List<Recipe> get _filtered {
-    if (_search.text.isEmpty) return widget.recipes;
-    return widget.recipes
-        .where(
-          (r) => r.title.toLowerCase().contains(_search.text.toLowerCase()),
-        )
-        .toList();
-  }
-
-  @override
-  void dispose() {
-    _search.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return DraggableScrollableSheet(
-      initialChildSize: 0.6,
-      minChildSize: 0.4,
-      maxChildSize: 0.92,
-      expand: false,
-      builder: (context, scrollController) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: AppTheme.baseBackground,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── Handle ──
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 12, bottom: 16),
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: AppTheme.greyAccent.withValues(alpha: 0.4),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-              ),
-
-              // ── Title + Search ──
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Pick a Recipe',
-                      style: Theme.of(context).textTheme.headlineLarge,
-                    ),
-                    const SizedBox(height: 12),
-                    RecipeSearchBar(
-                      controller: _search,
-                      hintText: 'Search recipes...',
-                      onChanged: (_) => setState(() {}),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              // ── Recipe list ──
-              Expanded(
-                child: _filtered.isEmpty
-                    ? Center(
-                        child: Text(
-                          'No recipes match',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(color: AppTheme.greyAccent),
-                        ),
-                      )
-                    : ListView.builder(
-                        controller: scrollController,
-                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
-                        itemCount: _filtered.length,
-                        itemBuilder: (context, index) {
-                          final recipe = _filtered[index];
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 10),
-                            child: MealPlannerRecipeCard(
-                              recipe: recipe,
-                              onTap: () => Navigator.pop(context, recipe),
-                            ),
-                          );
-                        },
-                      ),
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 }
