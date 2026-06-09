@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:nyom_recipe_app/core/providers/calendar_provider.dart';
 import 'package:nyom_recipe_app/features/auth/providers/auth_provider.dart';
 import 'package:nyom_recipe_app/features/grocery/models/grocery_item.dart';
 import 'package:nyom_recipe_app/features/grocery/providers/grocery_provider.dart';
@@ -22,13 +23,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  // baseDate comes from the user's signup date so week numbers are consistent.
-  DateTime get _calendarBaseDate {
-    final signupDate = ref.watch(userCreatedAtProvider).value;
-    final anchor = signupDate ?? DateTime.now();
-    return anchor.subtract(Duration(days: anchor.weekday - 1));
-  }
-
   int _selectedWeekNumber = 1;
 
   String _getCurrentMealSlotByTime() {
@@ -43,9 +37,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // todayMealPlanProvider is always pinned to today — never affected by
     // the calendar date selection. Use valueOrNull so switching dates doesn't
     // flash a loading spinner; the previous data stays visible while refreshing.
-    final todayPlan = ref
-        .watch(todayMealPlanProvider)
-        .value; // keep for hero card
+    final todayPlan = ref.watch(todayMealPlanProvider).value;
+    final baseDate = ref.watch(calendarBaseDateProvider);
+    final currentWeek = ref.watch(currentWeekNumberProvider);
+    if (_selectedWeekNumber != currentWeek && _selectedWeekNumber == 1) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() => _selectedWeekNumber = currentWeek);
+      });
+    }
     final selectedPlan = ref.watch(mealPlanProvider).value;
     final recipesAsync = ref.watch(recipesProvider);
     final groceryAsync = ref.watch(groceryProvider);
@@ -67,7 +66,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               const SizedBox(height: 20),
 
               // ── Weekly planner summary ─────────────────────────────────
-              _buildWeeklyPlanner(selectedPlan),
+              _buildWeeklyPlanner(selectedPlan, baseDate),
               const SizedBox(height: 20),
 
               // ── Recipes feed ───────────────────────────────────────────
@@ -190,7 +189,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   // ── Weekly planner summary ──────────────────────────────────────────────────
 
-  Widget _buildWeeklyPlanner(MealPlan? plan) {
+  Widget _buildWeeklyPlanner(MealPlan? plan, DateTime baseDate) {
     final int totalMeals = plan == null
         ? 0
         : plan.breakfast.length + plan.lunch.length + plan.dinner.length;
@@ -273,11 +272,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 const SizedBox(height: 12),
 
                 WeeklyCalendarStrip.home(
-                  baseDate: _calendarBaseDate,
+                  baseDate: baseDate,
                   activeWeekNumber: _selectedWeekNumber,
                   onWeekChanged: (newWeek) {
                     setState(() => _selectedWeekNumber = newWeek);
-                    final selectedMonday = _calendarBaseDate.add(
+                    final selectedMonday = baseDate.add(
                       Duration(days: (newWeek - 1) * 7),
                     );
                     final dateKey =

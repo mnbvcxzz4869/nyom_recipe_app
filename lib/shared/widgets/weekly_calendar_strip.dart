@@ -11,11 +11,7 @@ class WeeklyCalendarStrip extends StatefulWidget {
   final ValueChanged<int> onWeekChanged;
   final Function(DateTime selectedDate)? onDateChanged;
   final CalendarStripVariant variant;
-
-  /// Lowest week number the left chevron will allow (inclusive). Defaults to 1.
   final int minWeekNumber;
-
-  /// Highest week number the right chevron will allow (inclusive). Defaults to unbounded.
   final int? maxWeekNumber;
 
   const WeeklyCalendarStrip({
@@ -69,14 +65,15 @@ class _WeeklyCalendarStripState extends State<WeeklyCalendarStrip> {
     'Sun',
   ];
 
+  // Normalize any date to its Monday
+  DateTime _toMonday(DateTime date) =>
+      date.subtract(Duration(days: date.weekday - 1));
+
   @override
   void initState() {
     super.initState();
-    // Default highlight to today's weekday (Mon=0 … Sun=6)
-    _activeDayIndex = DateTime.now().weekday - 1;
+    _activeDayIndex = _todayIndexForWeek(widget.activeWeekNumber);
 
-    // Fire onDateChanged after the first frame so the parent provider
-    // is seeded with today's actual date on initial render.
     if (widget.onDateChanged != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
@@ -88,10 +85,23 @@ class _WeeklyCalendarStripState extends State<WeeklyCalendarStrip> {
     }
   }
 
+  // Returns today's index (0–6) if today falls in the given week,
+  // otherwise returns 0 (Monday) as a safe default.
+  int _todayIndexForWeek(int weekNum) {
+    final today = DateTime.now();
+    final days = _getDaysForWeek(weekNum);
+    for (int i = 0; i < days.length; i++) {
+      if (_isSameDay(days[i], today)) return i;
+    }
+    return 0;
+  }
+
+  bool _isSameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
+
   List<DateTime> _getDaysForWeek(int weekNum) {
-    final DateTime baseMonday = widget.baseDate.subtract(
-      Duration(days: widget.baseDate.weekday - 1),
-    );
+    // Always normalize baseDate to Monday first to avoid any drift
+    final DateTime baseMonday = _toMonday(widget.baseDate);
     final DateTime targetMonday = baseMonday.add(
       Duration(days: (weekNum - 1) * 7),
     );
@@ -111,11 +121,14 @@ class _WeeklyCalendarStripState extends State<WeeklyCalendarStrip> {
         IconButton(
           onPressed: widget.activeWeekNumber > widget.minWeekNumber
               ? () {
-                  widget.onWeekChanged(widget.activeWeekNumber - 1);
+                  final newWeek = widget.activeWeekNumber - 1;
+                  // Reset selected day to today if today is in the new week,
+                  // otherwise default to Monday (index 0)
+                  final newDayIndex = _todayIndexForWeek(newWeek);
+                  setState(() => _activeDayIndex = newDayIndex);
+                  widget.onWeekChanged(newWeek);
                   widget.onDateChanged?.call(
-                    _getDaysForWeek(
-                      widget.activeWeekNumber - 1,
-                    )[_activeDayIndex],
+                    _getDaysForWeek(newWeek)[newDayIndex],
                   );
                 }
               : null,
@@ -144,11 +157,12 @@ class _WeeklyCalendarStripState extends State<WeeklyCalendarStrip> {
               widget.maxWeekNumber == null ||
                   widget.activeWeekNumber < widget.maxWeekNumber!
               ? () {
-                  widget.onWeekChanged(widget.activeWeekNumber + 1);
+                  final newWeek = widget.activeWeekNumber + 1;
+                  final newDayIndex = _todayIndexForWeek(newWeek);
+                  setState(() => _activeDayIndex = newDayIndex);
+                  widget.onWeekChanged(newWeek);
                   widget.onDateChanged?.call(
-                    _getDaysForWeek(
-                      widget.activeWeekNumber + 1,
-                    )[_activeDayIndex],
+                    _getDaysForWeek(newWeek)[newDayIndex],
                   );
                 }
               : null,

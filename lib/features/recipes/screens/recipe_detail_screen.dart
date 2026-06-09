@@ -9,16 +9,6 @@ import 'package:nyom_recipe_app/shared/widgets/grocery_checkbox_tile.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 // ---------------------------------------------------------------------------
-// Per-ID provider — thin wrapper around the repository
-// ---------------------------------------------------------------------------
-final recipeByIdProvider = FutureProvider.family<Recipe, String>((
-  ref,
-  id,
-) async {
-  return ref.read(recipeRepositoryProvider).fetchById(id);
-});
-
-// ---------------------------------------------------------------------------
 // Screen entry point — accepts only an ID
 // ---------------------------------------------------------------------------
 class RecipeDetailScreen extends ConsumerWidget {
@@ -65,23 +55,125 @@ class RecipeDetailScreen extends ConsumerWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Actual body — same UI as before, but driven by a fetched Recipe
+// Actual body
 // ---------------------------------------------------------------------------
-class _RecipeDetailBody extends StatefulWidget {
+class _RecipeDetailBody extends ConsumerStatefulWidget {
   final Recipe recipe;
   const _RecipeDetailBody({required this.recipe});
 
   @override
-  State<_RecipeDetailBody> createState() => _RecipeDetailBodyState();
+  ConsumerState<_RecipeDetailBody> createState() => _RecipeDetailBodyState();
 }
 
-class _RecipeDetailBodyState extends State<_RecipeDetailBody> {
+class _RecipeDetailBodyState extends ConsumerState<_RecipeDetailBody> {
   late List<bool> _checkedIngredients;
 
   @override
   void initState() {
     super.initState();
     _checkedIngredients = List.filled(widget.recipe.ingredients.length, false);
+  }
+
+  // ── 3-dot menu ────────────────────────────────────────────────────────────
+  void _showOptionsMenu(BuildContext context) async {
+    final RenderBox button = context.findRenderObject() as RenderBox;
+    final RenderBox overlay =
+        Navigator.of(context).overlay!.context.findRenderObject() as RenderBox;
+    final RelativeRect position = RelativeRect.fromRect(
+      Rect.fromPoints(
+        button.localToGlobal(Offset.zero, ancestor: overlay),
+        button.localToGlobal(
+          button.size.bottomRight(Offset.zero),
+          ancestor: overlay,
+        ),
+      ),
+      Offset.zero & overlay.size,
+    );
+
+    final result = await showMenu<String>(
+      context: context,
+      position: position,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      color: AppTheme.cardWhite,
+      items: [
+        PopupMenuItem(
+          value: 'edit',
+          child: Row(
+            children: [
+              const Icon(
+                Icons.edit_outlined,
+                size: 18,
+                color: AppTheme.headingGreen,
+              ),
+              const SizedBox(width: 10),
+              Text('Edit', style: Theme.of(context).textTheme.bodyMedium),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'delete',
+          child: Row(
+            children: [
+              const Icon(
+                Icons.delete_outline_rounded,
+                size: 18,
+                color: Colors.redAccent,
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'Delete',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: Colors.redAccent),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+
+    if (!mounted) return;
+
+    if (result == 'edit') {
+      context.push('/recipe-edit/${widget.recipe.id}', extra: widget.recipe);
+    } else if (result == 'delete') {
+      _confirmDelete(context);
+    }
+  }
+
+  // ── Delete confirmation dialog ─────────────────────────────────────────────
+  void _confirmDelete(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppTheme.cardWhite,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: const Text('Delete Recipe'),
+        content: Text(
+          'Are you sure you want to delete "${widget.recipe.title}"? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text('Cancel', style: TextStyle(color: AppTheme.greyAccent)),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(dialogContext).pop();
+              await ref.read(recipesProvider.notifier).delete(widget.recipe.id);
+              if (mounted) context.pop();
+            },
+            child: const Text(
+              'Delete',
+              style: TextStyle(
+                color: Colors.redAccent,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -155,6 +247,7 @@ class _RecipeDetailBodyState extends State<_RecipeDetailBody> {
                     ),
                   ),
                 ),
+                // ── Back button ──────────────────────────────────────
                 Positioned(
                   top: topPadding + 4,
                   left: 16,
@@ -175,23 +268,25 @@ class _RecipeDetailBodyState extends State<_RecipeDetailBody> {
                     ),
                   ),
                 ),
+                // ── 3-dot menu button ────────────────────────────────
                 Positioned(
                   top: topPadding + 4,
                   right: 16,
-                  child: GestureDetector(
-                    onTap: () =>
-                        context.push('/recipe-edit/${widget.recipe.id}', extra: widget.recipe), 
-                    child: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: AppTheme.cardWhite.withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.edit_outlined,
-                        size: 16,
-                        color: AppTheme.headingGreen,
+                  child: Builder(
+                    builder: (btnContext) => GestureDetector(
+                      onTap: () => _showOptionsMenu(btnContext),
+                      child: Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: AppTheme.cardWhite.withValues(alpha: 0.9),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.more_vert_rounded,
+                          size: 20,
+                          color: AppTheme.headingGreen,
+                        ),
                       ),
                     ),
                   ),

@@ -9,6 +9,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/weekly_calendar_strip.dart';
 import '../widgets/grocery_progress_card.dart';
 import '../widgets/grocery_category_card.dart';
+import 'package:nyom_recipe_app/core/providers/calendar_provider.dart';
 
 class GroceryListScreen extends ConsumerStatefulWidget {
   const GroceryListScreen({super.key});
@@ -18,23 +19,6 @@ class GroceryListScreen extends ConsumerStatefulWidget {
 }
 
 class _GroceryListScreenState extends ConsumerState<GroceryListScreen> {
-  DateTime get _calendarBaseDate {
-    final signupDate = ref.watch(userCreatedAtProvider).value;
-    final anchor = signupDate ?? DateTime.now();
-    return anchor.subtract(Duration(days: anchor.weekday - 1));
-  }
-
-  int get _currentWeekNumber {
-    final base = _calendarBaseDate;
-    final today = DateTime.now();
-    final todayMonday = today.subtract(Duration(days: today.weekday - 1));
-    return ((todayMonday.difference(base).inDays) ~/ 7) + 1;
-  }
-
-  int get _minWeekNumber =>
-      (_currentWeekNumber - 2).clamp(1, _currentWeekNumber);
-  int get _maxWeekNumber => _currentWeekNumber + 2;
-
   int _selectedWeekNumber = 1;
 
   bool _weekInitialized = false;
@@ -49,7 +33,7 @@ class _GroceryListScreenState extends ConsumerState<GroceryListScreen> {
     super.didChangeDependencies();
     if (!_weekInitialized) {
       _weekInitialized = true;
-      _selectedWeekNumber = _currentWeekNumber; // safe here — ref is available
+      _selectedWeekNumber = ref.read(currentWeekNumberProvider);
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ref.read(selectedGroceryWeekProvider.notifier).state = _selectedWeekKey;
       });
@@ -57,7 +41,7 @@ class _GroceryListScreenState extends ConsumerState<GroceryListScreen> {
   }
 
   String get _selectedWeekKey {
-    final base = _calendarBaseDate;
+    final base = ref.read(calendarBaseDateProvider);
     final selectedMonday = base.add(
       Duration(days: (_selectedWeekNumber - 1) * 7),
     );
@@ -76,8 +60,9 @@ class _GroceryListScreenState extends ConsumerState<GroceryListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final baseDate = ref.watch(calendarBaseDateProvider);
+    final currentWeek = ref.watch(currentWeekNumberProvider);
     final asyncItems = ref.watch(groceryProvider);
-
     return asyncItems.when(
       loading: () => const Scaffold(
         backgroundColor: AppTheme.baseBackground,
@@ -108,11 +93,16 @@ class _GroceryListScreenState extends ConsumerState<GroceryListScreen> {
           ),
         ),
       ),
-      data: (items) => _buildScreen(context, items),
+      data: (items) => _buildScreen(context, items, baseDate, currentWeek),
     );
   }
 
-  Widget _buildScreen(BuildContext context, List<GroceryItem> items) {
+  Widget _buildScreen(
+    BuildContext context,
+    List<GroceryItem> items,
+    DateTime baseDate,
+    int currentWeek,
+  ) {
     final grouped = _grouped(items);
 
     int totalItems = 0;
@@ -167,15 +157,15 @@ class _GroceryListScreenState extends ConsumerState<GroceryListScreen> {
                   vertical: 8.0,
                 ),
                 child: WeeklyCalendarStrip.grocery(
-                  baseDate: _calendarBaseDate,
+                  baseDate: baseDate,
                   activeWeekNumber: _selectedWeekNumber,
                   onWeekChanged: (newWeek) {
                     setState(() => _selectedWeekNumber = newWeek);
                     ref.read(selectedGroceryWeekProvider.notifier).state =
                         _selectedWeekKey;
                   },
-                  minWeekNumber: _minWeekNumber,
-                  maxWeekNumber: _maxWeekNumber,
+                  minWeekNumber: (currentWeek - 2).clamp(1, currentWeek),
+                  maxWeekNumber: currentWeek + 2,
                 ),
               ),
             ),

@@ -12,6 +12,7 @@ import '../../../shared/widgets/recipe_card.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/weekly_calendar_strip.dart';
 import '../../../shared/widgets/recipe_search_bar.dart';
+import 'package:nyom_recipe_app/core/providers/calendar_provider.dart';
 
 class WeeklyPlannerScreen extends ConsumerStatefulWidget {
   const WeeklyPlannerScreen({super.key});
@@ -24,24 +25,6 @@ class WeeklyPlannerScreen extends ConsumerStatefulWidget {
 class _WeeklyPlannerScreenState extends ConsumerState<WeeklyPlannerScreen> {
   // baseDate comes from the user's signup date (Week 1 anchor).
   // Falls back to the Monday of the current week while loading.
-  DateTime get _calendarBaseDate {
-    final signupDate = ref.watch(userCreatedAtProvider).value;
-    final anchor = signupDate ?? DateTime.now();
-    return anchor.subtract(Duration(days: anchor.weekday - 1));
-  }
-
-  /// The week number that contains today, relative to _calendarBaseDate.
-  int get _currentWeekNumber {
-    final base = _calendarBaseDate;
-    final today = DateTime.now();
-    final todayMonday = today.subtract(Duration(days: today.weekday - 1));
-    return ((todayMonday.difference(base).inDays) ~/ 7) + 1;
-  }
-
-  int get _minWeekNumber =>
-      (_currentWeekNumber - 2).clamp(1, _currentWeekNumber);
-  int get _maxWeekNumber => _currentWeekNumber + 2;
-
   int _selectedWeekNumber = 1;
 
   @override
@@ -49,7 +32,10 @@ class _WeeklyPlannerScreenState extends ConsumerState<WeeklyPlannerScreen> {
     super.initState();
     // Start on the current week, not week 1, so the user lands on today.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) setState(() => _selectedWeekNumber = _currentWeekNumber);
+      if (mounted)
+        setState(
+          () => _selectedWeekNumber = ref.read(currentWeekNumberProvider),
+        );
     });
   }
 
@@ -119,8 +105,9 @@ class _WeeklyPlannerScreenState extends ConsumerState<WeeklyPlannerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final baseDate = ref.watch(calendarBaseDateProvider);
+    final currentWeek = ref.watch(currentWeekNumberProvider);
     final asyncPlan = ref.watch(mealPlanProvider);
-
     return Scaffold(
       backgroundColor: AppTheme.baseBackground,
       body: SafeArea(
@@ -149,14 +136,14 @@ class _WeeklyPlannerScreenState extends ConsumerState<WeeklyPlannerScreen> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: WeeklyCalendarStrip(
-                  baseDate: _calendarBaseDate,
+                  baseDate: baseDate,
                   activeWeekNumber: _selectedWeekNumber,
                   showDayRow: true,
                   onWeekChanged: (newWeek) =>
                       setState(() => _selectedWeekNumber = newWeek),
                   onDateChanged: _onDateChanged,
-                  minWeekNumber: _minWeekNumber,
-                  maxWeekNumber: _maxWeekNumber,
+                  minWeekNumber: (currentWeek - 2).clamp(1, currentWeek),
+                  maxWeekNumber: currentWeek + 2,
                 ),
               ),
             ),

@@ -11,9 +11,43 @@ final recipesProvider = AsyncNotifierProvider<RecipeNotifier, List<Recipe>>(
   RecipeNotifier.new,
 );
 
+final recipeByIdProvider = FutureProvider.family<Recipe, String>((
+  ref,
+  id,
+) async {
+  return ref.read(recipeRepositoryProvider).fetchById(id);
+});
+
 class RecipeNotifier extends AsyncNotifier<List<Recipe>> {
   @override
-  Future<List<Recipe>> build() => ref.read(recipeRepositoryProvider).fetchAll();
+  Future<List<Recipe>> build() async {
+    // Subscribe to Supabase Realtime on the recipes table.
+    // Any INSERT / UPDATE / DELETE from any device triggers a local refresh.
+    final channel = Supabase.instance.client
+        .channel('recipes_changes')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'recipes',
+          callback: (payload) {
+            // Invalidate the per-recipe cache if we know the affected ID.
+            final affectedId =
+                (payload.oldRecord['id'] ?? payload.newRecord['id'])?.toString();
+            if (affectedId != null) {
+              ref.invalidate(recipeByIdProvider(affectedId));
+            }
+            ref.invalidateSelf();
+          },
+        )
+        .subscribe();
+
+    // Unsubscribe when the provider is disposed (e.g. user logs out).
+    ref.onDispose(() {
+      Supabase.instance.client.removeChannel(channel);
+    });
+
+    return ref.read(recipeRepositoryProvider).fetchAll();
+  }
 
   Future<void> add(Recipe recipe) async {
     await ref.read(recipeRepositoryProvider).create(recipe);
@@ -27,6 +61,7 @@ class RecipeNotifier extends AsyncNotifier<List<Recipe>> {
 
   Future<void> delete(String id) async {
     await ref.read(recipeRepositoryProvider).delete(id);
+    ref.invalidate(recipeByIdProvider(id));
     ref.invalidateSelf();
   }
 }

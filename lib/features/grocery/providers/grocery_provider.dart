@@ -20,15 +20,23 @@ final selectedGroceryWeekProvider = StateProvider<String>((ref) {
 
 final groceryProvider =
     AsyncNotifierProvider<GroceryNotifier, List<GroceryItem>>(
-  GroceryNotifier.new,
-);
-
+      GroceryNotifier.new,
+    );
 
 class GroceryNotifier extends AsyncNotifier<List<GroceryItem>> {
   @override
-  Future<List<GroceryItem>> build() {
+  Future<List<GroceryItem>> build() async {
     final weekKey = ref.watch(selectedGroceryWeekProvider);
-    return ref.read(groceryRepositoryProvider).fetchAll(weekKey: weekKey);
+    final items = await ref
+        .read(groceryRepositoryProvider)
+        .fetchAll(weekKey: weekKey);
+    // Sort alphabetically by name only — items never move when checked/unchecked.
+    items.sort(
+      (a, b) => a.ingredient.name.toLowerCase().compareTo(
+        b.ingredient.name.toLowerCase(),
+      ),
+    );
+    return items;
   }
 
   Future<void> toggle(String id, bool isBought) async {

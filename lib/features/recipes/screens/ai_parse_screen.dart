@@ -9,7 +9,6 @@ import 'package:nyom_recipe_app/core/services/supabase_service.dart';
 import 'package:nyom_recipe_app/features/recipes/models/ingredient_item.dart';
 import 'package:nyom_recipe_app/features/recipes/models/recipe.dart';
 import 'package:nyom_recipe_app/features/recipes/providers/recipe_provider.dart';
-import 'package:nyom_recipe_app/features/recipes/screens/recipe_detail_screen.dart';
 import 'package:nyom_recipe_app/shared/widgets/custom_text_field.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/theme/app_theme.dart';
