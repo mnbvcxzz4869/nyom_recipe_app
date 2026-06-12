@@ -12,7 +12,7 @@ import '../../../core/theme/app_theme.dart';
 
 class WeeklyPlannerPreview extends ConsumerStatefulWidget {
   final MealPlan? plan;
-  final DateTime baseDate;
+  final DateTime? baseDate;
 
   const WeeklyPlannerPreview({
     super.key,
@@ -27,7 +27,6 @@ class WeeklyPlannerPreview extends ConsumerStatefulWidget {
 
 class _WeeklyPlannerPreviewState extends ConsumerState<WeeklyPlannerPreview> {
   int? _selectedWeekNumber;
-
   bool _userHasInteracted = false;
 
   String _toDateKey(DateTime d) =>
@@ -35,21 +34,29 @@ class _WeeklyPlannerPreviewState extends ConsumerState<WeeklyPlannerPreview> {
 
   @override
   Widget build(BuildContext context) {
-    final plan = widget.plan;
     final baseDate = widget.baseDate;
-
     final currentWeek = ref.watch(currentWeekNumberProvider);
-    final signupLoaded = ref.watch(userCreatedAtProvider).hasValue;
 
-    if (!_userHasInteracted && signupLoaded) {
-      _selectedWeekNumber = currentWeek;
-    }
+    // Reset interaction when user changes
+    ref.listen(currentUserIdProvider, (previous, next) {
+      if (previous != next) {
+        setState(() {
+          _selectedWeekNumber = null;
+          _userHasInteracted = false;
+        });
+      }
+    });
 
-    if (!signupLoaded && _selectedWeekNumber == null) {
+    if (baseDate == null || currentWeek == null) {
       return const SizedBox.shrink();
     }
 
-    final effectiveWeek = _selectedWeekNumber ?? currentWeek;
+    // Derive the week to display (single source of truth)
+    final effectiveWeek = _userHasInteracted
+        ? (_selectedWeekNumber ?? currentWeek)
+        : currentWeek;
+
+    final plan = widget.plan; // <-- FIX: use widget.plan
 
     final int totalMeals = plan == null
         ? 0
@@ -147,7 +154,11 @@ class _WeeklyPlannerPreviewState extends ConsumerState<WeeklyPlannerPreview> {
                         .setDate(_toDateKey(selectedMonday));
                   },
                   onDateChanged: (selectedDate) {
-                    setState(() => _userHasInteracted = true);
+                    // Freeze the week that was being viewed at the time of tap
+                    setState(() {
+                      _userHasInteracted = true;
+                      _selectedWeekNumber = effectiveWeek;
+                    });
                     ref
                         .read(selectedDateProvider.notifier)
                         .setDate(_toDateKey(selectedDate));

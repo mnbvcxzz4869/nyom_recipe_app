@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:nyom_recipe_app/features/auth/providers/auth_provider.dart';
 import 'package:nyom_recipe_app/features/recipes/models/recipe.dart';
 import 'package:nyom_recipe_app/shared/utils/week_key.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -22,6 +23,9 @@ final groceryProvider =
 class GroceryNotifier extends AsyncNotifier<List<GroceryItem>> {
   @override
   Future<List<GroceryItem>> build() async {
+    final userId = ref.watch(currentUserIdProvider);
+    if (userId == null) return [];
+
     final weekKey = ref.watch(selectedGroceryWeekProvider);
     final items = await ref
         .read(groceryRepositoryProvider)

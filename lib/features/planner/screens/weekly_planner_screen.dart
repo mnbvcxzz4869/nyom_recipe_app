@@ -89,14 +89,18 @@ class _WeeklyPlannerScreenState extends ConsumerState<WeeklyPlannerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final baseDate = ref.watch(calendarBaseDateProvider);
-    final currentWeek = ref.watch(currentWeekNumberProvider);
-    final signupLoaded = ref.watch(userCreatedAtProvider).hasValue;
-    if (signupLoaded && _selectedWeekNumber == null) {
-      _selectedWeekNumber = currentWeek;
+    final baseDate = ref.watch(calendarBaseDateProvider); 
+    final currentWeek = ref.watch(currentWeekNumberProvider); 
+
+    if (baseDate == null || currentWeek == null) {
+      return const Scaffold(body: AppLoadingOverlay());
     }
-    final effectiveWeek = _selectedWeekNumber ?? currentWeek;
+
+    _selectedWeekNumber ??= currentWeek;
+
+    final effectiveWeek = _selectedWeekNumber!;
     final asyncPlan = ref.watch(plannerMealPlanProvider);
+
     ref.listen(plannerSelectedDateProvider, (_, _) {
       setState(() {
         _dismissed['breakfast']!.clear();
@@ -142,7 +146,8 @@ class _WeeklyPlannerScreenState extends ConsumerState<WeeklyPlannerScreen> {
               ),
             ),
             asyncPlan.when(
-              loading: () => const SliverFillRemaining(child: AppLoadingOverlay()),
+              loading: () =>
+                  const SliverFillRemaining(child: AppLoadingOverlay()),
               error: (err, _) => SliverFillRemaining(
                 child: Center(
                   child: Column(

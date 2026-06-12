@@ -19,31 +19,11 @@ class GroceryListScreen extends ConsumerStatefulWidget {
 }
 
 class _GroceryListScreenState extends ConsumerState<GroceryListScreen> {
-  int _selectedWeekNumber = 1;
+  int? _selectedWeekNumber;
 
-  bool _weekInitialized = false;
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_weekInitialized) {
-      _weekInitialized = true;
-      _selectedWeekNumber = ref.read(currentWeekNumberProvider);
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ref.read(selectedGroceryWeekProvider.notifier).state = _selectedWeekKey;
-      });
-    }
-  }
-
-  String get _selectedWeekKey {
-    final base = ref.read(calendarBaseDateProvider);
-    final selectedMonday = base.add(
-      Duration(days: (_selectedWeekNumber - 1) * 7),
+  String _selectedWeekKey(DateTime baseDate) {
+    final selectedMonday = baseDate.add(
+      Duration(days: ((_selectedWeekNumber ?? 1) - 1) * 7),
     );
     final dateKey =
         '${selectedMonday.year}-${selectedMonday.month.toString().padLeft(2, '0')}-${selectedMonday.day.toString().padLeft(2, '0')}';
@@ -60,9 +40,23 @@ class _GroceryListScreenState extends ConsumerState<GroceryListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final baseDate = ref.watch(calendarBaseDateProvider);
-    final currentWeek = ref.watch(currentWeekNumberProvider);
+    final baseDate = ref.watch(calendarBaseDateProvider); 
+    final currentWeek = ref.watch(currentWeekNumberProvider); 
     final asyncItems = ref.watch(groceryProvider);
+
+    if (baseDate == null || currentWeek == null) {
+      return const Scaffold(body: AppLoadingOverlay());
+    }
+
+    if (_selectedWeekNumber == null) {
+      _selectedWeekNumber = currentWeek;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(selectedGroceryWeekProvider.notifier).state = _selectedWeekKey(
+          baseDate,
+        );
+      });
+    }
+
     return asyncItems.when(
       loading: () => const Scaffold(body: AppLoadingOverlay()),
       error: (err, _) => Scaffold(
@@ -152,11 +146,11 @@ class _GroceryListScreenState extends ConsumerState<GroceryListScreen> {
                 ),
                 child: WeeklyCalendarStrip.grocery(
                   baseDate: baseDate,
-                  activeWeekNumber: _selectedWeekNumber,
+                  activeWeekNumber: _selectedWeekNumber!,
                   onWeekChanged: (newWeek) {
                     setState(() => _selectedWeekNumber = newWeek);
                     ref.read(selectedGroceryWeekProvider.notifier).state =
-                        _selectedWeekKey;
+                        _selectedWeekKey(baseDate);
                   },
                   minWeekNumber: (currentWeek - 2).clamp(1, currentWeek),
                   maxWeekNumber: currentWeek + 2,

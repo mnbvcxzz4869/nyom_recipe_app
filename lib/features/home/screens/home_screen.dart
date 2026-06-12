@@ -22,7 +22,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final todayPlan = ref.watch(todayMealPlanProvider).value;
-    final baseDate = ref.watch(calendarBaseDateProvider);
+    final baseDate = ref.watch(calendarBaseDateProvider); 
     final selectedPlan = ref.watch(mealPlanProvider).value;
     final recipesAsync = ref.watch(recipesProvider);
     final groceryAsync = ref.watch(groceryProvider);
