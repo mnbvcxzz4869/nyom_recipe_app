@@ -16,7 +16,6 @@ final authStateProvider = StreamProvider<AuthState>(
   (ref) => ref.read(authRepositoryProvider).authStateChanges,
 );
 
-// Fetches and caches the current user's profile
 final currentUserProvider = FutureProvider<AppUser?>((ref) async {
   final authState = ref.watch(authStateProvider);
   return authState.when(
@@ -29,8 +28,6 @@ final currentUserProvider = FutureProvider<AppUser?>((ref) async {
   );
 });
 
-/// Exposes the user's signup date — used as the calendar anchor (Week 1).
-/// Falls back to the Monday of the current week if the profile isn't loaded yet.
 final userCreatedAtProvider = FutureProvider<DateTime>((ref) async {
   final user = await ref.watch(currentUserProvider.future);
   if (user != null) return user.signupDate;

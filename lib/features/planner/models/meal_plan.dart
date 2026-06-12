@@ -13,7 +13,6 @@ class MealPlan {
     this.dinner = const [],
   });
 
-  // Builds a MealPlan from a list of DB rows for a given date
   factory MealPlan.fromRows(String dateKey, List<Map<String, dynamic>> rows) {
     final breakfast = <Recipe>[];
     final lunch = <Recipe>[];

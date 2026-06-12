@@ -13,7 +13,6 @@ class UserRepository {
         .eq('id', userId)
         .single();
 
-    // email comes from auth, not profiles table
     return AppUser.fromJson({
       ...response,
       'email': _client.auth.currentUser!.email ?? '',

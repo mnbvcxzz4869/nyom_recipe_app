@@ -34,7 +34,7 @@ class HeroRecipeCard extends StatelessWidget {
           child: Row(
             children: [
               Material(
-                elevation: 1, // Layered inside the card frame
+                elevation: 1, 
                 borderRadius: BorderRadius.circular(8),
                 clipBehavior: Clip.antiAlias,
                 child: SizedBox(
@@ -71,9 +71,6 @@ class HeroRecipeCard extends StatelessWidget {
                         ),
                 ),
               ),
-              // Left: Recipe image
-
-              // Right: Text content
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
@@ -95,8 +92,6 @@ class HeroRecipeCard extends StatelessWidget {
                         ),
                       ],
                       const SizedBox(height: 4),
-
-                      // Recipe title
                       Text(
                         recipe.title,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -106,8 +101,6 @@ class HeroRecipeCard extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-
-                      // Duration + Cook Now button
                       Row(
                         children: [
                           const Icon(
@@ -123,7 +116,6 @@ class HeroRecipeCard extends StatelessWidget {
                             ).textTheme.bodySmall?.copyWith(fontSize: 12),
                           ),
                           const Spacer(),
-                          // Cook Now button
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 6,

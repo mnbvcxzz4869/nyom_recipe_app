@@ -26,12 +26,8 @@ class WeeklyPlannerPreview extends ConsumerStatefulWidget {
 }
 
 class _WeeklyPlannerPreviewState extends ConsumerState<WeeklyPlannerPreview> {
-  // Nullable until currentWeekNumberProvider resolves from its async dependency.
-  // Once set, user interaction can override it freely.
   int? _selectedWeekNumber;
 
-  // Tracks whether the user has manually changed the week. If they haven't,
-  // we keep syncing to currentWeekNumberProvider as it resolves.
   bool _userHasInteracted = false;
 
   String _toDateKey(DateTime d) =>
@@ -49,7 +45,6 @@ class _WeeklyPlannerPreviewState extends ConsumerState<WeeklyPlannerPreview> {
       _selectedWeekNumber = currentWeek;
     }
 
-    // Don't render until we have real data — avoids the week-1 flash
     if (!signupLoaded && _selectedWeekNumber == null) {
       return const SizedBox.shrink();
     }

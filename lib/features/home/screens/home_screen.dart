@@ -19,22 +19,8 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   WidgetsBinding.instance.addPostFrameCallback((_) {
-  //     final today = DateTime.now();
-  //     final todayKey =
-  //         '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
-  //     ref.read(selectedDateProvider.notifier).setDate(todayKey);
-  //   });
-  // }
-
   @override
   Widget build(BuildContext context) {
-    // todayMealPlanProvider is always pinned to today — never affected by
-    // the calendar date selection. Use .value so switching dates doesn't
-    // flash a loading spinner; previous data stays visible while refreshing.
     final todayPlan = ref.watch(todayMealPlanProvider).value;
     final baseDate = ref.watch(calendarBaseDateProvider);
     final selectedPlan = ref.watch(mealPlanProvider).value;
@@ -53,15 +39,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               const HomeHeader(),
               const SizedBox(height: 16),
 
-              // ── Today's hero card ──────────────────────────────────────
               TodayPlanCard(plan: todayPlan),
               const SizedBox(height: 20),
 
-              // ── Weekly planner summary ─────────────────────────────────
               WeeklyPlannerPreview(plan: selectedPlan, baseDate: baseDate),
               const SizedBox(height: 20),
 
-              // ── Recipes feed ───────────────────────────────────────────
               recipesAsync.when(
                 loading: () => const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16.0),
@@ -75,7 +58,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
               const SizedBox(height: 20),
 
-              // ── Grocery preview ────────────────────────────────────────
               groceryAsync.when(
                 loading: () => const SizedBox.shrink(),
                 error: (_, _) => const SizedBox.shrink(),

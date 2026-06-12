@@ -31,7 +31,6 @@ class GeminiService {
 
     final data = response.data as Map<String, dynamic>;
 
-    // Build ingredient items from Gemini response
     final ingredients = (data['ingredients'] as List<dynamic>? ?? [])
         .map((e) => IngredientItem.fromJson(e as Map<String, dynamic>))
         .toList();

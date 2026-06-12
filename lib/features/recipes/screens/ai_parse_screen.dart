@@ -33,17 +33,14 @@ class _AiParseScreenState extends ConsumerState<AiParseScreen>
   File? _pickedImage;
   String? _uploadedImageUrl;
 
-  // Tab 1 — AI Parse
   final _textInputController = TextEditingController();
   bool _isParsingText = false;
   String? _textParseError;
 
-  // Tab 2 — From URL
   final _urlInputController = TextEditingController();
   bool _isParsingUrl = false;
   String? _urlParseError;
 
-  // Tab 3 — Manual
   final _manualTitleController = TextEditingController();
   final _manualTimeController = TextEditingController();
   String? _selectedCategory;
@@ -343,8 +340,6 @@ class _AiParseScreenState extends ConsumerState<AiParseScreen>
             Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // --- FIXED HEADER ZONE ---
-                // Wrapping headers in a solid Container matching background prevents bleed-through
                 Container(
                   color: AppTheme.baseBackground,
                   padding: const EdgeInsets.only(bottom: 8),
@@ -426,7 +421,6 @@ class _AiParseScreenState extends ConsumerState<AiParseScreen>
                   ),
                 ),
 
-                // --- END FIXED HEADER ZONE ---
                 const SizedBox(height: 8),
                 Expanded(
                   child: TabBarView(

@@ -7,7 +7,6 @@ class AuthRepository {
   final SupabaseClient _client;
   AuthRepository(this._client);
 
-  // Call once at app startup before using Google Sign-In
   Future<void> initGoogleSignIn() async {
     await GoogleSignIn.instance.initialize(
       serverClientId: dotenv.env['WEB_CLIENT_ID'] ?? '',
@@ -32,20 +31,16 @@ class AuthRepository {
       _client.auth.signInWithPassword(email: email, password: password);
 
   Future<AuthResponse> signInWithGoogle() async {
-    // Step 1: authenticate — triggers native Credential Manager sheet
     final googleUser = await GoogleSignIn.instance.authenticate();
 
-    // Step 2: get idToken from authentication
     final idToken = googleUser.authentication.idToken;
 
-    // Step 3: authorize scopes to get accessToken
     final clientAuth = await googleUser.authorizationClient
         .authorizeScopes(['email', 'profile']);
     final accessToken = clientAuth.accessToken;
 
     if (idToken == null) throw const GoogleAuthException('No ID token received');
 
-    // Step 4: pass both tokens to Supabase
     return _client.auth.signInWithIdToken(
       provider: OAuthProvider.google,
       idToken: idToken,

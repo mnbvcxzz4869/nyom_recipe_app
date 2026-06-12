@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 
 class AppLoadingOverlay extends StatelessWidget {
-  /// Optional label shown below the spinner (e.g. 'Parsing recipe…').
   final String? label;
 
   const AppLoadingOverlay({super.key, this.label});
@@ -17,7 +16,6 @@ class AppLoadingOverlay extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // M3 Expressive: large contained circular indicator
             Theme(
               data: theme.copyWith(
                 progressIndicatorTheme: ProgressIndicatorThemeData(

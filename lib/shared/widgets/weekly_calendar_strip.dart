@@ -65,7 +65,6 @@ class _WeeklyCalendarStripState extends State<WeeklyCalendarStrip> {
     'Sun',
   ];
 
-  // Normalize any date to its Monday
   DateTime _toMonday(DateTime date) =>
       date.subtract(Duration(days: date.weekday - 1));
 
@@ -85,8 +84,6 @@ class _WeeklyCalendarStripState extends State<WeeklyCalendarStrip> {
     }
   }
 
-  // Returns today's index (0–6) if today falls in the given week,
-  // otherwise returns 0 (Monday) as a safe default.
   int _todayIndexForWeek(int weekNum) {
     final today = DateTime.now();
     final days = _getDaysForWeek(weekNum);
@@ -100,7 +97,6 @@ class _WeeklyCalendarStripState extends State<WeeklyCalendarStrip> {
       a.year == b.year && a.month == b.month && a.day == b.day;
 
   List<DateTime> _getDaysForWeek(int weekNum) {
-    // Always normalize baseDate to Monday first to avoid any drift
     final DateTime baseMonday = _toMonday(widget.baseDate);
     final DateTime targetMonday = baseMonday.add(
       Duration(days: (weekNum - 1) * 7),
@@ -122,8 +118,6 @@ class _WeeklyCalendarStripState extends State<WeeklyCalendarStrip> {
           onPressed: widget.activeWeekNumber > widget.minWeekNumber
               ? () {
                   final newWeek = widget.activeWeekNumber - 1;
-                  // Reset selected day to today if today is in the new week,
-                  // otherwise default to Monday (index 0)
                   final newDayIndex = _todayIndexForWeek(newWeek);
                   setState(() => _activeDayIndex = newDayIndex);
                   widget.onWeekChanged(newWeek);

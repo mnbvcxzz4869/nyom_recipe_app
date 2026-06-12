@@ -4,9 +4,9 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/grocery_checkbox_tile.dart';
 
 enum IngredientListType {
-  groceryCheck, // Dengan Checkbox (Halaman Grocery List)
-  recipeView, // Dengan Bullet/Titik bulat biasa (Halaman Detail Resep)
-  editableAdd, // Dengan tombol hapus/delete icon (Halaman Tambah Resep)
+  groceryCheck, 
+  recipeView, 
+  editableAdd, 
 }
 
 class GroceryCategoryCard extends StatelessWidget {
@@ -35,7 +35,6 @@ class GroceryCategoryCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // --- FIX: JUDUL KATEGORI DI LUAR BOX PUTIH ---
           Padding(
             padding: const EdgeInsets.only(left: 4.0, bottom: 8.0),
             child: Text(
@@ -44,7 +43,6 @@ class GroceryCategoryCard extends StatelessWidget {
             ),
           ),
 
-          // --- BOX MATERIAL: SEKARANG MURNI HANYA MEMBUNGKUS DAFTAR ISI ---
           Material(
             color: AppTheme.cardWhite,
             elevation: 2,
@@ -70,7 +68,7 @@ class GroceryCategoryCard extends StatelessWidget {
                         Divider(
                           color: AppTheme.crossedOutGreen,
                           thickness: 1,
-                          height: 12, // Margin vertikal pembatas yang bersih
+                          height: 12, 
                         ),
                     ],
                   );

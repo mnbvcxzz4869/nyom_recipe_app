@@ -56,8 +56,6 @@ class GroceryRepository {
         .eq('is_bought', true);
   }
 
-  /// Bulk-inserts all ingredients from a recipe as grocery items,
-  /// tagged with [recipeId] and [weekKey] so they can be removed together.
   Future<void> addFromRecipe({
     required Recipe recipe,
     required String weekKey,
@@ -79,8 +77,6 @@ class GroceryRepository {
     await _client.from('grocery_items').insert(rows);
   }
 
-  /// Removes all grocery rows that were auto-added by [recipeId] in [weekKey].
-  /// Manual items (recipe_id IS NULL) are never touched.
   Future<void> removeByRecipe({
     required String recipeId,
     required String weekKey,

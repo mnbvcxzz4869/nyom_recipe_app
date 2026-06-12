@@ -18,12 +18,11 @@ class RecipeFilterChips extends StatelessWidget {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       clipBehavior:
-          Clip.none, // Ensures shadows/borders don't get clipped during scroll
+          Clip.none, 
       child: Row(
         children: categories.map((category) {
           final bool isSelected = category == selectedCategory;
 
-          // Apply a right margin gap of 6px to every item except the last one
           final isLast = category == categories.last;
 
           return Padding(
@@ -35,13 +34,11 @@ class RecipeFilterChips extends StatelessWidget {
     );
   }
 
-  /// Your exact Material 3 custom buildTab styling engine
   Widget _buildTab(BuildContext context, String category, bool isSelected) {
     return GestureDetector(
       onTap: () => onCategorySelected(category),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        // Completely removed fixed height box limits. Sizing scales naturally with padding.
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected ? AppTheme.warmYellow : AppTheme.cardWhite,

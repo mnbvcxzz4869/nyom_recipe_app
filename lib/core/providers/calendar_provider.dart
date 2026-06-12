@@ -1,8 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nyom_recipe_app/features/auth/providers/auth_provider.dart';
 
-/// The Monday of the user's signup week — used as the Week 1 anchor.
-/// Time is stripped to midnight to avoid off-by-one week calculations.
 final calendarBaseDateProvider = Provider<DateTime>((ref) {
   final signupDate = ref.watch(userCreatedAtProvider).value;
   final anchor = signupDate ?? DateTime.now();
@@ -10,7 +8,6 @@ final calendarBaseDateProvider = Provider<DateTime>((ref) {
   return anchorDate.subtract(Duration(days: anchorDate.weekday - 1));
 });
 
-/// The current week number relative to the user's signup week.
 final currentWeekNumberProvider = Provider<int>((ref) {
   final base = ref.watch(calendarBaseDateProvider);
   final today = DateTime.now();

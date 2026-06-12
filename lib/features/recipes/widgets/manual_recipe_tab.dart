@@ -91,15 +91,12 @@ class ManualRecipeTab extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // ── Name ──
           CustomTextField(
             label: 'Name',
             hintText: 'Insert recipe name',
             controller: titleController,
           ),
           const SizedBox(height: 8),
-
-          // ── Estimated Time + Category ──
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -217,8 +214,6 @@ class ManualRecipeTab extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-
-          // ── Ingredients ──
           Text(
             'Ingredients List',
             style: Theme.of(context).textTheme.titleMedium,
@@ -254,8 +249,6 @@ class ManualRecipeTab extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-
-          // ── Steps ──
           Text('Steps', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           Material(
@@ -285,8 +278,6 @@ class ManualRecipeTab extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-
-          // ── Recipe Photo ──
           Text('Recipe Photo', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           Material(
@@ -362,7 +353,6 @@ class ManualRecipeTab extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // ── Save ──
           CustomButton(
             text: 'Save Recipe',
             type: CustomButtonType.primary,

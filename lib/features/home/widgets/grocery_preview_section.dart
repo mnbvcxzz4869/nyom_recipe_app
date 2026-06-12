@@ -30,7 +30,7 @@ class GroceryPreviewSection extends ConsumerWidget {
                 'Grocery List',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
-              if (totalItems != 0) // ← add this condition
+              if (totalItems != 0) 
                 TextButton(
                   onPressed: () => context.go('/grocery'),
                   style: TextButton.styleFrom(

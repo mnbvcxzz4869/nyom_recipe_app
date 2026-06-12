@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:nyom_recipe_app/core/constants/app_constants.dart'; // Imported constants
+import 'package:nyom_recipe_app/core/constants/app_constants.dart'; 
 import 'package:nyom_recipe_app/features/recipes/models/recipe.dart';
 import 'package:nyom_recipe_app/features/recipes/providers/recipe_provider.dart';
 import 'package:nyom_recipe_app/shared/widgets/app_loading_overlay.dart';
@@ -21,7 +21,6 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _selectedCategory = 'All';
 
-  // Dynamically add 'All' to your global constants list
   late final List<String> _categories = [
     'All',
     ...AppConstants.recipeCategories,
@@ -53,11 +52,9 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.baseBackground,
-      // REMOVED: Main SafeArea wrapper removed so background extends behind the status bar
       body: CustomScrollView(
         clipBehavior: Clip.none,
         slivers: [
-          // ── STICKY COMPACT APP BAR ───────────────────────────────────────
           SliverAppBar(
             backgroundColor: AppTheme.baseBackground,
             surfaceTintColor: Colors.transparent,
@@ -66,7 +63,6 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
             elevation: 0,
             centerTitle: false,
             titleSpacing: 16.0,
-            // Force the app bar to respect the status bar height layout
             primary: true,
             title: Padding(
               padding: const EdgeInsets.only(top: 8.0),
@@ -107,7 +103,6 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
             ),
           ),
 
-          // ── BODY: LOADING / ERROR / EMPTY / GRID ────────────────────────
           asyncRecipes.when(
             loading: () =>
                 const SliverFillRemaining(child: AppLoadingOverlay()),

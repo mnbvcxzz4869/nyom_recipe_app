@@ -61,8 +61,7 @@ class AppBottomNav extends StatelessWidget {
                     Icons.home_rounded,
                     currentVisualIndex,
                   ),
-                  const SizedBox(width: 16), // 16px exact gap between items
-
+                  const SizedBox(width: 16), 
                   _buildTabIcon(
                     context,
                     1,
@@ -71,7 +70,6 @@ class AppBottomNav extends StatelessWidget {
                   ),
                   const SizedBox(width: 16),
 
-                  // Unified Center Plus Button (No labels, no special circle decoration)
                   _buildTabIcon(
                     context,
                     2,
@@ -131,7 +129,7 @@ class AppBottomNav extends StatelessWidget {
             color: isSelected ? activeColor : inactiveColor,
             size: itemIcon == Icons.add_rounded
                 ? 32
-                : 24, // Icon sizing scales cleanly inside the 48x48 box
+                : 24, 
           ),
         ),
       ),

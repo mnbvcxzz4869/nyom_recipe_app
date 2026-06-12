@@ -111,7 +111,6 @@ class _GroceryListScreenState extends ConsumerState<GroceryListScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.baseBackground,
-      // ── Clear-bought FAB ──────────────────────────────────────────────────
       floatingActionButton: boughtItems > 0
           ? FloatingActionButton.extended(
               onPressed: () async {
@@ -130,7 +129,6 @@ class _GroceryListScreenState extends ConsumerState<GroceryListScreen> {
         child: CustomScrollView(
           clipBehavior: Clip.none,
           slivers: [
-            // ── Title ───────────────────────────────────────────────────────
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.only(
@@ -146,7 +144,6 @@ class _GroceryListScreenState extends ConsumerState<GroceryListScreen> {
               ),
             ),
 
-            // ── Calendar strip ───────────────────────────────────────────
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(
@@ -167,7 +164,6 @@ class _GroceryListScreenState extends ConsumerState<GroceryListScreen> {
               ),
             ),
 
-            // ── Progress card ────────────────────────────────────────────
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(
@@ -183,7 +179,6 @@ class _GroceryListScreenState extends ConsumerState<GroceryListScreen> {
 
             const SliverToBoxAdapter(child: SizedBox(height: 8.0)),
 
-            // ── Empty state ──────────────────────────────────────────────
             if (items.isEmpty)
               SliverFillRemaining(
                 hasScrollBody: false,
@@ -210,7 +205,6 @@ class _GroceryListScreenState extends ConsumerState<GroceryListScreen> {
                 ),
               )
             else
-              // ── Category cards ─────────────────────────────────────────
               SliverPadding(
                 padding: const EdgeInsets.only(
                   left: 16.0,

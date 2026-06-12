@@ -24,19 +24,23 @@ class HomeHeader extends ConsumerWidget {
               Text(
                 readableToday,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: AppTheme.greyAccent,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  color: AppTheme.greyAccent,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               currentUserAsync.when(
                 data: (user) => Text(
                   'Hello, ${user?.username ?? 'Chef'}! 👋',
                   style: Theme.of(context).textTheme.headlineLarge,
                 ),
-                loading: () => Text('Hello! 👋',
-                    style: Theme.of(context).textTheme.headlineLarge),
-                error: (_, _) => Text('Hello, Chef! 👋',
-                    style: Theme.of(context).textTheme.headlineLarge),
+                loading: () => Text(
+                  'Hello! 👋',
+                  style: Theme.of(context).textTheme.headlineLarge,
+                ),
+                error: (_, _) => Text(
+                  'Hello, Chef! 👋',
+                  style: Theme.of(context).textTheme.headlineLarge,
+                ),
               ),
             ],
           ),
@@ -72,10 +76,13 @@ void _showProfileDialog(BuildContext context, WidgetRef ref) {
       insetPadding: const EdgeInsets.all(0),
       backgroundColor: AppTheme.cardWhite,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(8))),
+        borderRadius: BorderRadius.all(Radius.circular(8)),
+      ),
       contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-      content: Text('Would you like to log out?',
-          style: Theme.of(context).textTheme.titleMedium),
+      content: Text(
+        'Would you like to log out?',
+        style: Theme.of(context).textTheme.titleMedium,
+      ),
       actionsPadding: const EdgeInsets.only(right: 16, bottom: 16),
       actions: [
         TextButton(
@@ -87,7 +94,12 @@ void _showProfileDialog(BuildContext context, WidgetRef ref) {
             Navigator.pop(context);
             await ref.read(authRepositoryProvider).signOut();
           },
-          child: Text('Logout', style: Theme.of(context).textTheme.bodySmall),
+          child: Text(
+            'Logout',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Colors.red),
+          ),
         ),
       ],
     ),

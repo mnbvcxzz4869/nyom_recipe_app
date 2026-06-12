@@ -41,7 +41,6 @@ class CustomTextField extends StatelessWidget {
           Text(label, style: theme.textTheme.titleMedium),
           const SizedBox(height: 8),
 
-          // ── TEXTFormField LAYERED LAYOUT ───────────────────────────────────
           FormField<String>(
             validator: validator,
             autovalidateMode: autovalidateMode,
@@ -49,7 +48,6 @@ class CustomTextField extends StatelessWidget {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // This Material container stays isolated! No expansion when errors occur.
                   Material(
                     elevation: elevation,
                     borderRadius: BorderRadius.circular(8),
@@ -73,7 +71,6 @@ class CustomTextField extends StatelessWidget {
                           vertical: 16,
                         ),
                         filled: false,
-                        // Cleanly stripped borders so the input card relies on Material clipping
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                           borderSide: BorderSide.none,
@@ -90,7 +87,6 @@ class CustomTextField extends StatelessWidget {
                     ),
                   ),
 
-                  // Render error message cleanly underneath the isolated visual container
                   if (fieldState.hasError)
                     Padding(
                       padding: const EdgeInsets.only(top: 6.0, left: 4.0),

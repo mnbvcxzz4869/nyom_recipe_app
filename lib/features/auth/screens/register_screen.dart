@@ -49,7 +49,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             password: _passwordController.text.trim(),
             username: _usernameController.text.trim(),
           );
-      // GoRouter redirect handles navigation automatically
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -80,7 +79,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Column(
+    return Stack(
       children: [
         Scaffold(
           body: SafeArea(
@@ -125,7 +124,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           _isPasswordObscured
                               ? Icons.visibility_outlined
                               : Icons.visibility_off_outlined,
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.6,
+                          ),
                         ),
                         onPressed: () {
                           setState(
@@ -148,7 +149,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           _isConfirmPasswordObscured
                               ? Icons.visibility_outlined
                               : Icons.visibility_off_outlined,
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.6,
+                          ),
                         ),
                         onPressed: () {
                           setState(

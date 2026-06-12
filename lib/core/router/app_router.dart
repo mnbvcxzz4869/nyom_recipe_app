@@ -14,7 +14,6 @@ import '../../features/recipes/screens/recipes_screen.dart';
 import '../../features/planner/screens/weekly_planner_screen.dart';
 import '../services/supabase_service.dart';
 
-// Temporary lightweight placeholder layouts to ensure initial compilation succeeds
 class PlaceholderScreen extends StatelessWidget {
   final String title;
   const PlaceholderScreen({super.key, required this.title});
@@ -24,7 +23,7 @@ class PlaceholderScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(
         0xFFFDF6F0,
-      ), // Matches AppTheme.baseBackground
+      ), 
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -50,7 +49,6 @@ class PlaceholderScreen extends StatelessWidget {
   }
 }
 
-// Global router key declaration profile
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(
   debugLabel: 'root',
 );
@@ -70,18 +68,16 @@ final appRouter = GoRouter(
   },
   refreshListenable: GoRouterRefreshStream(supabase.auth.onAuthStateChange),
   routes: [
-    // --- AUTHENTICATION FLOW ROUTING CHANNELS ---
     GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
     GoRoute(
       path: '/register',
       builder: (context, state) => const RegisterScreen(),
     ),
 
-    // --- CENTER TRIGGER MODAL SHORTCUT ROUTE ---
     GoRoute(
       path: '/ai-parse',
       parentNavigatorKey:
-          _rootNavigatorKey, // Overlay modal sheet on top of everything
+          _rootNavigatorKey, 
       builder: (context, state) => const AiParseScreen(recipeId: null),
     ),
 
@@ -104,13 +100,11 @@ final appRouter = GoRouter(
       },
     ),
 
-    // --- PERSISTENT 4-BRANCH BOTTOM NAVIGATION SHELL ---
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {
         return AppBottomNav(navigationShell: navigationShell);
       },
       branches: [
-        // Index Branch 0: Home Feed View
         StatefulShellBranch(
           routes: [
             GoRoute(
@@ -120,7 +114,6 @@ final appRouter = GoRouter(
           ],
         ),
 
-        // Index Branch 1: Recipes Repository List View
         StatefulShellBranch(
           routes: [
             GoRoute(
@@ -130,7 +123,6 @@ final appRouter = GoRouter(
           ],
         ),
 
-        // Index Branch 2: Meal Scheduler Calendar View
         StatefulShellBranch(
           routes: [
             GoRoute(
@@ -140,7 +132,6 @@ final appRouter = GoRouter(
           ],
         ),
 
-        // Index Branch 3: Compiled Shopping Grocery View
         StatefulShellBranch(
           routes: [
             GoRoute(

@@ -12,7 +12,6 @@ final plannerRepositoryProvider = Provider(
   (ref) => PlannerRepository(Supabase.instance.client),
 );
 
-// ── Shared notifier class ─────────────────────────────────────────────────────
 class SelectedDateNotifier extends StateNotifier<String> {
   SelectedDateNotifier(super.initialDate);
   void setDate(String dateKey) => state = dateKey;
@@ -23,24 +22,20 @@ String _todayKey() {
   return '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
 }
 
-// ── Home screen date (resets to today on HomeScreen mount) ────────────────────
 final selectedDateProvider =
     StateNotifierProvider<SelectedDateNotifier, String>(
       (ref) => SelectedDateNotifier(_todayKey()),
     );
 
-// ── Planner screen date (independent from home) ───────────────────────────────
 final plannerSelectedDateProvider =
     StateNotifierProvider<SelectedDateNotifier, String>(
       (ref) => SelectedDateNotifier(_todayKey()),
     );
 
-// ── Today's plan — always pinned to today, used by TodayPlanCard ──────────────
 final todayMealPlanProvider = FutureProvider<MealPlan>((ref) {
   return ref.read(plannerRepositoryProvider).fetchByDate(_todayKey());
 });
 
-// ── Home screen meal plan (watches selectedDateProvider) ─────────────────────
 final mealPlanProvider = AsyncNotifierProvider<MealPlanNotifier, MealPlan>(
   MealPlanNotifier.new,
 );
@@ -90,7 +85,6 @@ class MealPlanNotifier extends AsyncNotifier<MealPlan> {
   }
 }
 
-// ── Planner screen meal plan (watches plannerSelectedDateProvider) ─────────────
 final plannerMealPlanProvider =
     AsyncNotifierProvider<PlannerMealPlanNotifier, MealPlan>(
       PlannerMealPlanNotifier.new,

@@ -24,12 +24,11 @@ class NyomApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Crucial swap to .router initialization format
     return MaterialApp.router(
       title: 'Nyom',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      routerConfig: appRouter, // Injects your clean GoRouter mapping profile
+      routerConfig: appRouter, 
     );
   }
 }

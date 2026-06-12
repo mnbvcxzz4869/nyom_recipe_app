@@ -3,7 +3,7 @@ import '../../core/theme/app_theme.dart';
 
 class GroceryCheckboxTile extends StatelessWidget {
   final String title;
-  final String? measurement; // e.g., "500g", "2 tbsp"
+  final String? measurement; 
   final bool isChecked;
   final ValueChanged<bool?> onChanged;
 
@@ -32,7 +32,6 @@ class GroceryCheckboxTile extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
         child: Row(
           children: [
-            // --- CUSTOM DESIGN RADIUS CHECKBOX CONTROLLER ---
             SizedBox(
               height: 24,
               width: 24,
@@ -45,14 +44,13 @@ class GroceryCheckboxTile extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(
                     4,
-                  ), // Beautifully soft curved checkbox profile
+                  ), 
                 ),
               ),
             ),
 
             const SizedBox(width: 14),
 
-            // --- INLINE ITEM ITEM TITLE ---
             Expanded(
               child: Text(
                 title,
@@ -64,7 +62,6 @@ class GroceryCheckboxTile extends StatelessWidget {
               ),
             ),
 
-            // --- OPTIONAL TAIL MEASUREMENT DISPLAY VALUE ---
             if (measurement != null) ...[
               const SizedBox(width: 8),
               Text(

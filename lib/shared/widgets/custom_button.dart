@@ -22,7 +22,6 @@ class CustomButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    // 1. Resolve Background Color
     Color getBackgroundColor() {
       if (onPressed == null) return theme.disabledColor;
       switch (type) {
@@ -35,7 +34,6 @@ class CustomButton extends StatelessWidget {
       }
     }
 
-    // 2. Resolve Text/Foreground Color
     Color getForegroundColor() {
       if (onPressed == null) return theme.disabledColor.withValues(alpha: 0.6);
       switch (type) {

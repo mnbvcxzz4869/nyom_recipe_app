@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart'; // 1. Import the SVG package
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nyom_recipe_app/features/auth/providers/auth_provider.dart';
 import 'package:nyom_recipe_app/shared/utils/validators.dart';
@@ -33,7 +33,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             email: _emailController.text.trim(),
             password: _passwordController.text.trim(),
           );
-      // No need to navigate — GoRouter redirect handles it automatically
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -49,7 +48,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _isLoading = true);
     try {
       await ref.read(authRepositoryProvider).signInWithGoogle();
-      // GoRouter redirect handles navigation
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -117,12 +115,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         },
                       ),
                     ),
-                    // Inline Actions
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
                         onPressed: () {
-                          // Navigate to password recovery
+                          // TODO: FORGOT PASSWORD
                         },
                         child: const Text('Forgot Password?'),
                       ),
@@ -133,7 +130,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       onPressed: _isLoading ? null : _signIn,
                     ),
 
-                    // Visual Separator Divider
                     Row(
                       children: [
                         Expanded(
@@ -159,7 +155,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                       ],
                     ),
-                    // Alternative Third-Party Provider Entry
                     CustomButton(
                       text: 'Continue with Google',
                       type: CustomButtonType.secondary,
@@ -177,19 +172,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           "Don't have an account? ",
                           style: theme.textTheme.bodySmall,
                         ),
-                        GestureDetector(
-                          onTap: () {
-                            // Redirect flow to register screen state
+                        TextButton(
+                          onPressed: () {
+                            context.push('/register');
                           },
-                          child: TextButton(
-                            onPressed: () {
-                              context.push('/register');
-                            },
-                            style: TextButton.styleFrom(
-                              foregroundColor: theme.colorScheme.primary,
-                            ),
-                            child: const Text('Register'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: theme.colorScheme.primary,
                           ),
+                          child: const Text('Register'),
                         ),
                       ],
                     ),

@@ -10,9 +10,6 @@ import 'package:nyom_recipe_app/features/recipes/providers/recipe_provider.dart'
 import 'package:nyom_recipe_app/shared/widgets/grocery_checkbox_tile.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
-// ---------------------------------------------------------------------------
-// Screen entry point — accepts only an ID
-// ---------------------------------------------------------------------------
 class RecipeDetailScreen extends ConsumerWidget {
   final String recipeId;
   const RecipeDetailScreen({super.key, required this.recipeId});
@@ -53,9 +50,6 @@ class RecipeDetailScreen extends ConsumerWidget {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Actual body
-// ---------------------------------------------------------------------------
 class _RecipeDetailBody extends ConsumerStatefulWidget {
   final Recipe recipe;
   const _RecipeDetailBody({required this.recipe});
@@ -73,7 +67,6 @@ class _RecipeDetailBodyState extends ConsumerState<_RecipeDetailBody> {
     _checkedIngredients = List.filled(widget.recipe.ingredients.length, false);
   }
 
-  // ── 3-dot menu ────────────────────────────────────────────────────────────
   void _showOptionsMenu(BuildContext context) async {
     final RenderBox button = context.findRenderObject() as RenderBox;
     final RenderBox overlay =
@@ -140,7 +133,6 @@ class _RecipeDetailBodyState extends ConsumerState<_RecipeDetailBody> {
     }
   }
 
-  // ── Delete confirmation dialog ─────────────────────────────────────────────
   void _confirmDelete(BuildContext context) {
     showDialog(
       context: context,
@@ -198,7 +190,6 @@ class _RecipeDetailBodyState extends ConsumerState<_RecipeDetailBody> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Hero image ────────────────────────────────────────────
             Stack(
               children: [
                 Material(
@@ -246,7 +237,6 @@ class _RecipeDetailBodyState extends ConsumerState<_RecipeDetailBody> {
                     ),
                   ),
                 ),
-                // ── Back button ──────────────────────────────────────
                 Positioned(
                   top: topPadding + 4,
                   left: 16,
@@ -267,7 +257,6 @@ class _RecipeDetailBodyState extends ConsumerState<_RecipeDetailBody> {
                     ),
                   ),
                 ),
-                // ── 3-dot menu button ────────────────────────────────
                 Positioned(
                   top: topPadding + 4,
                   right: 16,
@@ -293,7 +282,6 @@ class _RecipeDetailBodyState extends ConsumerState<_RecipeDetailBody> {
               ],
             ),
 
-            // ── Title block ───────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
               child: Column(
@@ -348,7 +336,6 @@ class _RecipeDetailBodyState extends ConsumerState<_RecipeDetailBody> {
               ),
             ),
 
-            // ── Ingredients card ──────────────────────────────────────
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Material(
@@ -391,7 +378,6 @@ class _RecipeDetailBodyState extends ConsumerState<_RecipeDetailBody> {
               ),
             ),
 
-            // ── Steps ─────────────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 20, 16, 4),
               child: Text(

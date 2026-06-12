@@ -26,7 +26,6 @@ class GroceryNotifier extends AsyncNotifier<List<GroceryItem>> {
     final items = await ref
         .read(groceryRepositoryProvider)
         .fetchAll(weekKey: weekKey);
-    // Sort alphabetically by name only — items never move when checked/unchecked.
     items.sort(
       (a, b) => a.ingredient.name.toLowerCase().compareTo(
         b.ingredient.name.toLowerCase(),

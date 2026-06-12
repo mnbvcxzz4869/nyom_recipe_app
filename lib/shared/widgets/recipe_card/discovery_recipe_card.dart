@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:nyom_recipe_app/features/recipes/models/recipe.dart';
 import '../../../core/theme/app_theme.dart';
 
-/// Portrait grid card used in the discovery feed.
 class DiscoveryRecipeCard extends StatelessWidget {
   final Recipe recipe;
   final VoidCallback? onTap;
@@ -66,7 +65,6 @@ class DiscoveryRecipeCard extends StatelessWidget {
                             ),
                           ),
 
-                    // FLOATING CATEGORY BADGE (Ditimpa on top-left)
                     Positioned(
                       top: 8,
                       left: 8,
@@ -96,7 +94,7 @@ class DiscoveryRecipeCard extends StatelessWidget {
             ),
 
             Expanded(
-              flex: 2, // Allocates clean space for title and metadata metrics
+              flex: 2, 
               child: Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12.0,

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:nyom_recipe_app/features/recipes/models/recipe.dart';
 import '../../../core/theme/app_theme.dart';
 
-/// Compact horizontal row card used in the planner and planner preview.
 class MealPlannerRecipeCard extends StatelessWidget {
   final Recipe recipe;
   final VoidCallback? onTap;
@@ -27,7 +26,6 @@ class MealPlannerRecipeCard extends StatelessWidget {
         onTap: onTap,
         child: Row(
           children: [
-            // 1. ELEVATED LEFT THUMBNAIL IMAGE FRAME
             Material(
               elevation: 1,
               borderRadius: BorderRadius.circular(8),
@@ -121,8 +119,6 @@ class MealPlannerRecipeCard extends StatelessWidget {
                 ],
               ),
             ),
-
-            // Clean trailing decoration indicator
             const Icon(
               Icons.chevron_right_rounded,
               color: AppTheme.greyAccent,
