@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../errors/app_exceptions.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../features/recipes/models/recipe.dart';
 import '../../features/recipes/models/ingredient_item.dart';
@@ -25,7 +26,7 @@ class GeminiService {
     );
 
     if (response.status != 200) {
-      throw Exception('Failed to parse recipe: ${response.data}');
+      throw RecipeParseException('${response.data}');
     }
 
     final data = response.data as Map<String, dynamic>;
@@ -39,7 +40,7 @@ class GeminiService {
       id: '',
       title: data['title'] as String,
       durationMinutes: data['duration_minutes'] as int,
-      imageUrl: data['image_url'] as String?, // add this line
+      imageUrl: data['image_url'] as String?,
       category: Category.values.byName(
         (data['category'] as String).toLowerCase(),
       ),
@@ -55,7 +56,7 @@ class GeminiService {
     );
 
     if (response.status != 200) {
-      throw Exception('Failed to categorize ingredients');
+      throw IngredientCategorizationException('status ${response.status}');
     }
 
     final data = response.data as Map<String, dynamic>;

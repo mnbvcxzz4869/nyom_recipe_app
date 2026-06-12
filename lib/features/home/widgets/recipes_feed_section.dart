@@ -31,13 +31,14 @@ class RecipesFeedSection extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('Recipes', style: Theme.of(context).textTheme.titleMedium),
-              TextButton(
-                onPressed: () => context.go('/recipes'),
-                style: TextButton.styleFrom(
-                  foregroundColor: Theme.of(context).colorScheme.tertiary,
+              if (recipes.length >= 6) 
+                TextButton(
+                  onPressed: () => context.go('/recipes'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Theme.of(context).colorScheme.tertiary,
+                  ),
+                  child: const Text('See more'),
                 ),
-                child: const Text('See more'),
-              ),
             ],
           ),
         ),
@@ -47,9 +48,9 @@ class RecipesFeedSection extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Text(
               'No recipes yet. Tap + to add your first one!',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.greyAccent,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppTheme.greyAccent),
             ),
           )
         else
@@ -69,7 +70,8 @@ class RecipesFeedSection extends StatelessWidget {
                       margin: const EdgeInsets.only(right: 16.0),
                       child: DiscoveryRecipeCard(
                         recipe: recipe,
-                        onTap: () => context.push('/recipe-detail/${recipe.id}'),
+                        onTap: () =>
+                            context.push('/recipe-detail/${recipe.id}'),
                       ),
                     );
                   }).toList(),

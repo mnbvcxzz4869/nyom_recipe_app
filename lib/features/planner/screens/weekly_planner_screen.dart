@@ -56,7 +56,8 @@ class _WeeklyPlannerScreenState extends ConsumerState<WeeklyPlannerScreen> {
         await ref
             .read(plannerMealPlanProvider.notifier)
             .addMeal(mealType.toLowerCase(), selected.id);
-      } catch (_) {
+      } catch (e) {
+        debugPrint('Recipe selection failed: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Failed to add meal. Try again.')),
@@ -74,7 +75,8 @@ class _WeeklyPlannerScreenState extends ConsumerState<WeeklyPlannerScreen> {
           .read(plannerMealPlanProvider.notifier)
           .removeMeal(key, recipeId);
       if (mounted) setState(() => _dismissed[key]!.remove(recipeId));
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Recipe deletion failed: $e');
       if (mounted) {
         setState(() => _dismissed[key]!.remove(recipeId));
         ScaffoldMessenger.of(context).showSnackBar(

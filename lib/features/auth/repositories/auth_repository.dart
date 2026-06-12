@@ -1,3 +1,4 @@
+import '../../../core/errors/app_exceptions.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -42,7 +43,7 @@ class AuthRepository {
         .authorizeScopes(['email', 'profile']);
     final accessToken = clientAuth.accessToken;
 
-    if (idToken == null) throw Exception('No ID token from Google');
+    if (idToken == null) throw const GoogleAuthException('No ID token received');
 
     // Step 4: pass both tokens to Supabase
     return _client.auth.signInWithIdToken(

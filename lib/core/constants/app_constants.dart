@@ -1,7 +1,6 @@
 class AppConstants {
   AppConstants._();
 
-  // Recipe categories shown in the add/edit form dropdown
   static const List<String> recipeCategories = [
     'Rice',
     'Noodle',
@@ -12,6 +11,5 @@ class AppConstants {
     'Desserts',
   ];
 
-  // Supabase storage bucket for recipe images
   static const String recipeImagesBucket = 'recipe-images';
 }

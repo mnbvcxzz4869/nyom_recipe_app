@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -66,7 +67,9 @@ class MealPlanNotifier extends AsyncNotifier<MealPlan> {
       await ref
           .read(groceryProvider.notifier)
           .addFromRecipe(recipe: recipe, weekKey: isoWeekKey(dateKey));
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Grocery sync failed: $e');
+    }
   }
 
   Future<void> removeMeal(String mealType, String recipeId) async {
@@ -81,7 +84,9 @@ class MealPlanNotifier extends AsyncNotifier<MealPlan> {
       await ref
           .read(groceryProvider.notifier)
           .removeByRecipe(recipeId: recipeId, weekKey: isoWeekKey(dateKey));
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Grocery sync failed: $e');
+    }
   }
 }
 
@@ -113,7 +118,9 @@ class PlannerMealPlanNotifier extends AsyncNotifier<MealPlan> {
       await ref
           .read(groceryProvider.notifier)
           .addFromRecipe(recipe: recipe, weekKey: isoWeekKey(dateKey));
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Grocery sync failed: $e');
+    }
   }
 
   Future<void> removeMeal(String mealType, String recipeId) async {
@@ -128,6 +135,8 @@ class PlannerMealPlanNotifier extends AsyncNotifier<MealPlan> {
       await ref
           .read(groceryProvider.notifier)
           .removeByRecipe(recipeId: recipeId, weekKey: isoWeekKey(dateKey));
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Grocery sync failed: $e');
+    }
   }
 }

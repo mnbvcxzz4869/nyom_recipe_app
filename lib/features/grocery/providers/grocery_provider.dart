@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:flutter_riverpod/misc.dart';
 import 'package:nyom_recipe_app/features/recipes/models/recipe.dart';
 import 'package:nyom_recipe_app/shared/utils/week_key.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -12,10 +11,7 @@ final groceryRepositoryProvider = Provider(
 );
 
 final selectedGroceryWeekProvider = StateProvider<String>((ref) {
-  final now = DateTime.now();
-  final dateKey =
-      '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-  return isoWeekKey(dateKey);
+  return isoWeekKey(todayKey());
 });
 
 final groceryProvider =
