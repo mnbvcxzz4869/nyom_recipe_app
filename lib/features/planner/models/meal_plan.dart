@@ -22,9 +22,13 @@ class MealPlan {
     for (final row in rows) {
       final recipe = Recipe.fromJson(row['recipes'] as Map<String, dynamic>);
       final mealType = (row['meal_type'] as String).toLowerCase();
-      if (mealType == 'breakfast') breakfast.add(recipe);
-      else if (mealType == 'lunch') lunch.add(recipe);
-      else if (mealType == 'dinner') dinner.add(recipe);
+      if (mealType == 'breakfast') {
+        breakfast.add(recipe);
+      } else if (mealType == 'lunch') {
+        lunch.add(recipe);
+      } else if (mealType == 'dinner') {
+        dinner.add(recipe);
+      }
     }
 
     return MealPlan(

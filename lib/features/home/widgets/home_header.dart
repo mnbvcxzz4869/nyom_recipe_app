@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:nyom_recipe_app/features/auth/providers/auth_provider.dart';
-import 'package:nyom_recipe_app/features/auth/repositories/auth_repository.dart';
 import '../../../core/theme/app_theme.dart';
 
 class HomeHeader extends ConsumerWidget {
@@ -36,7 +35,7 @@ class HomeHeader extends ConsumerWidget {
                 ),
                 loading: () => Text('Hello! 👋',
                     style: Theme.of(context).textTheme.headlineLarge),
-                error: (_, __) => Text('Hello, Chef! 👋',
+                error: (_, _) => Text('Hello, Chef! 👋',
                     style: Theme.of(context).textTheme.headlineLarge),
               ),
             ],
@@ -54,7 +53,7 @@ class HomeHeader extends ConsumerWidget {
                 radius: 24,
                 backgroundImage: AssetImage('assets/profile-pics.png'),
               ),
-              error: (_, __) => const CircleAvatar(
+              error: (_, _) => const CircleAvatar(
                 radius: 24,
                 backgroundImage: AssetImage('assets/profile-pics.png'),
               ),

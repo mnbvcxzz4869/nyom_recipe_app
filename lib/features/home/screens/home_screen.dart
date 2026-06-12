@@ -70,7 +70,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     child: Center(child: CircularProgressIndicator()),
                   ),
                 ),
-                error: (_, __) => const SizedBox.shrink(),
+                error: (_, _) => const SizedBox.shrink(),
                 data: (recipes) => RecipesFeedSection(recipes: recipes),
               ),
               const SizedBox(height: 20),
@@ -78,7 +78,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               // ── Grocery preview ────────────────────────────────────────
               groceryAsync.when(
                 loading: () => const SizedBox.shrink(),
-                error: (_, __) => const SizedBox.shrink(),
+                error: (_, _) => const SizedBox.shrink(),
                 data: (items) => GroceryPreviewSection(items: items),
               ),
             ],

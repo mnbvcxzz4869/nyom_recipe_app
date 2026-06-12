@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nyom_recipe_app/shared/utils/validators.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
 import '../providers/auth_provider.dart';
@@ -14,6 +15,7 @@ class RegisterScreen extends ConsumerStatefulWidget {
 }
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -33,18 +35,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   Future<void> _register() async {
-    // Basic validation
-    if (_passwordController.text != _confirmPasswordController.text) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Passwords do not match')));
-      return;
-    }
-
-    if (_usernameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Username cannot be empty')));
+    if (!(_formKey.currentState?.validate() ?? false)) {
       return;
     }
 
@@ -92,120 +83,139 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 12),
-              SvgPicture.asset('assets/nyom-logo.svg', height: 180),
-              CustomTextField(
-                label: 'Email Address',
-                hintText: 'Enter your email address',
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-              ),
-              CustomTextField(
-                label: 'Username',
-                hintText: 'Choose a username',
-                controller: _usernameController,
-                keyboardType: TextInputType.name,
-              ),
-              CustomTextField(
-                label: 'Password',
-                hintText: 'Create a password',
-                controller: _passwordController,
-                obscureText: _isPasswordObscured,
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _isPasswordObscured
-                        ? Icons.visibility_outlined
-                        : Icons.visibility_off_outlined,
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                  ),
-                  onPressed: () {
-                    setState(() => _isPasswordObscured = !_isPasswordObscured);
-                  },
+          child: Form(
+            key: _formKey,
+            autovalidateMode: AutovalidateMode.disabled,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 12),
+                SvgPicture.asset('assets/nyom-logo.svg', height: 180),
+                CustomTextField(
+                  label: 'Email Address',
+                  hintText: 'Enter your email address',
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                  validator: Validators.email,
                 ),
-              ),
-              CustomTextField(
-                label: 'Confirm Password',
-                hintText: 'Re-enter your password',
-                controller: _confirmPasswordController,
-                obscureText: _isConfirmPasswordObscured,
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _isConfirmPasswordObscured
-                        ? Icons.visibility_outlined
-                        : Icons.visibility_off_outlined,
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                  ),
-                  onPressed: () {
-                    setState(
-                      () => _isConfirmPasswordObscured =
-                          !_isConfirmPasswordObscured,
-                    );
-                  },
+                CustomTextField(
+                  label: 'Username',
+                  hintText: 'Choose a username',
+                  controller: _usernameController,
+                  keyboardType: TextInputType.name,
+                  textInputAction: TextInputAction.next,
+                  validator: Validators.username,
                 ),
-              ),
-              const SizedBox(height: 4),
-              CustomButton(
-                text: 'Register',
-                type: CustomButtonType.primary,
-                onPressed: _isLoading ? null : _register,
-              ),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  Expanded(
-                    child: Divider(
-                      color: theme.colorScheme.tertiary,
-                      thickness: 1,
+                CustomTextField(
+                  label: 'Password',
+                  hintText: 'Create a password',
+                  controller: _passwordController,
+                  obscureText: _isPasswordObscured,
+                  textInputAction: TextInputAction.next,
+                  validator: Validators.password,
+                  onChanged: (_) {
+                    _formKey.currentState?.validate();
+                  },
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isPasswordObscured
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
+                    onPressed: () {
+                      setState(
+                        () => _isPasswordObscured = !_isPasswordObscured,
+                      );
+                    },
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Text(
-                      'OR',
-                      style: theme.textTheme.titleSmall?.copyWith(
+                ),
+                CustomTextField(
+                  label: 'Confirm Password',
+                  hintText: 'Re-enter your password',
+                  controller: _confirmPasswordController,
+                  obscureText: _isConfirmPasswordObscured,
+                  textInputAction: TextInputAction.done,
+                  validator: Validators.confirmPassword(
+                    () => _passwordController.text,
+                  ),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isConfirmPasswordObscured
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
+                    onPressed: () {
+                      setState(
+                        () => _isConfirmPasswordObscured =
+                            !_isConfirmPasswordObscured,
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 4),
+                CustomButton(
+                  text: 'Register',
+                  type: CustomButtonType.primary,
+                  onPressed: _isLoading ? null : _register,
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Divider(
                         color: theme.colorScheme.tertiary,
+                        thickness: 1,
                       ),
                     ),
-                  ),
-                  Expanded(
-                    child: Divider(
-                      color: theme.colorScheme.tertiary,
-                      thickness: 1,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Text(
+                        'OR',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          color: theme.colorScheme.tertiary,
+                        ),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              CustomButton(
-                text: 'Continue with Google',
-                type: CustomButtonType.secondary,
-                icon: Image.asset(
-                  'assets/google-logo.webp',
-                  height: 22,
-                  width: 22,
-                  fit: BoxFit.contain,
+                    Expanded(
+                      child: Divider(
+                        color: theme.colorScheme.tertiary,
+                        thickness: 1,
+                      ),
+                    ),
+                  ],
                 ),
-                onPressed: _isLoading ? null : _signInWithGoogle,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "Already have an account? ",
-                    style: theme.textTheme.bodySmall,
+                CustomButton(
+                  text: 'Continue with Google',
+                  type: CustomButtonType.secondary,
+                  icon: Image.asset(
+                    'assets/google-logo.webp',
+                    height: 22,
+                    width: 22,
+                    fit: BoxFit.contain,
                   ),
-                  TextButton(
-                    onPressed: () => context.pop(),
-                    style: TextButton.styleFrom(
-                      foregroundColor: theme.colorScheme.primary,
+                  onPressed: _isLoading ? null : _signInWithGoogle,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Already have an account? ",
+                      style: theme.textTheme.bodySmall,
                     ),
-                    child: const Text('Log In'),
-                  ),
-                ],
-              ),
-            ],
+                    TextButton(
+                      onPressed: () => context.pop(),
+                      style: TextButton.styleFrom(
+                        foregroundColor: theme.colorScheme.primary,
+                      ),
+                      child: const Text('Log In'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

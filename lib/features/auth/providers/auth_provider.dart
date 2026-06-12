@@ -25,7 +25,7 @@ final currentUserProvider = FutureProvider<AppUser?>((ref) async {
       return ref.read(userRepositoryProvider).fetchCurrentUser();
     },
     loading: () => null,
-    error: (_, __) => null,
+    error: (_, _) => null,
   );
 });
 

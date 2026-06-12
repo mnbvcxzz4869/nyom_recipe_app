@@ -96,7 +96,7 @@ class _WeeklyPlannerScreenState extends ConsumerState<WeeklyPlannerScreen> {
     }
     final effectiveWeek = _selectedWeekNumber ?? currentWeek;
     final asyncPlan = ref.watch(plannerMealPlanProvider);
-    ref.listen(plannerSelectedDateProvider, (_, __) {
+    ref.listen(plannerSelectedDateProvider, (_, _) {
       setState(() {
         _dismissed['breakfast']!.clear();
         _dismissed['lunch']!.clear();

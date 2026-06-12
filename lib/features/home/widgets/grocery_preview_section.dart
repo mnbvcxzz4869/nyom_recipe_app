@@ -26,14 +26,18 @@ class GroceryPreviewSection extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Grocery List', style: Theme.of(context).textTheme.titleMedium),
-              TextButton(
-                onPressed: () => context.go('/grocery'),
-                style: TextButton.styleFrom(
-                  foregroundColor: Theme.of(context).colorScheme.tertiary,
-                ),
-                child: const Text('See more'),
+              Text(
+                'Grocery List',
+                style: Theme.of(context).textTheme.titleMedium,
               ),
+              if (totalItems != 0) // ← add this condition
+                TextButton(
+                  onPressed: () => context.go('/grocery'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Theme.of(context).colorScheme.tertiary,
+                  ),
+                  child: const Text('See more'),
+                ),
             ],
           ),
           const SizedBox(height: 4),
@@ -42,7 +46,10 @@ class GroceryPreviewSection extends ConsumerWidget {
             elevation: 2,
             borderRadius: BorderRadius.circular(8),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 16.0,
+              ),
               child: totalItems == 0
                   ? Center(
                       child: Padding(
@@ -50,9 +57,8 @@ class GroceryPreviewSection extends ConsumerWidget {
                         child: Text(
                           'Your grocery list is empty.\nPlan some meals to get started!',
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: AppTheme.greyAccent,
-                              ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: AppTheme.greyAccent),
                         ),
                       ),
                     )
@@ -69,9 +75,8 @@ class GroceryPreviewSection extends ConsumerWidget {
                             ),
                             Text(
                               '${(percentage * 100).round()}%',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: AppTheme.greyAccent,
-                                  ),
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: AppTheme.greyAccent),
                             ),
                           ],
                         ),
@@ -116,7 +121,9 @@ class GroceryPreviewSection extends ConsumerWidget {
                           child: TextButton(
                             onPressed: () => context.go('/grocery'),
                             style: TextButton.styleFrom(
-                              foregroundColor: Theme.of(context).colorScheme.tertiary,
+                              foregroundColor: Theme.of(
+                                context,
+                              ).colorScheme.tertiary,
                             ),
                             child: const Text('View All'),
                           ),

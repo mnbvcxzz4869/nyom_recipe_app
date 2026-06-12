@@ -132,7 +132,7 @@ class _RecipeDetailBodyState extends ConsumerState<_RecipeDetailBody> {
       ],
     );
 
-    if (!mounted) return;
+    if (!context.mounted) return;
 
     if (result == 'edit') {
       context.push('/recipe-edit/${widget.recipe.id}', extra: widget.recipe);
@@ -161,7 +161,7 @@ class _RecipeDetailBodyState extends ConsumerState<_RecipeDetailBody> {
             onPressed: () async {
               Navigator.of(dialogContext).pop();
               await ref.read(recipesProvider.notifier).delete(widget.recipe.id);
-              if (mounted) context.pop();
+              if (context.mounted) context.pop();
             },
             child: const Text(
               'Delete',
