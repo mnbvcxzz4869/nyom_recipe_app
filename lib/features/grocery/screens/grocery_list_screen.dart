@@ -186,7 +186,11 @@ class _GroceryListScreenState extends ConsumerState<GroceryListScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text('🛒', style: TextStyle(fontSize: 48)),
+                      const Icon(
+                        Icons.remove_shopping_cart_outlined,
+                        size: 48,
+                        color: AppTheme.greyAccent,
+                      ),
                       const SizedBox(height: 12),
                       Text(
                         'No grocery items yet',
@@ -200,6 +204,7 @@ class _GroceryListScreenState extends ConsumerState<GroceryListScreen> {
                           color: AppTheme.greyAccent,
                         ),
                       ),
+                      const SizedBox(height: 120),
                     ],
                   ),
                 ),

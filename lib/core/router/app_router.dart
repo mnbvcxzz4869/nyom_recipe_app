@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nyom_recipe_app/features/auth/screens/forgot_password_screen.dart';
+import 'package:nyom_recipe_app/features/auth/screens/reset_screen.dart';
 import 'package:nyom_recipe_app/features/grocery/screens/grocery_list_screen.dart';
 import 'package:nyom_recipe_app/features/home/screens/home_screen.dart';
 import 'package:nyom_recipe_app/features/recipes/screens/ai_parse_screen.dart';
@@ -21,9 +23,7 @@ class PlaceholderScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(
-        0xFFFDF6F0,
-      ), 
+      backgroundColor: const Color(0xFFFDF6F0),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -58,12 +58,20 @@ final appRouter = GoRouter(
   initialLocation: '/login',
   redirect: (context, state) {
     final isLoggedIn = supabase.auth.currentSession != null;
+    final location = state.matchedLocation;
+
     final isOnAuthScreen =
-        state.matchedLocation == '/login' ||
-        state.matchedLocation == '/register';
+        location == '/login' ||
+        location == '/register' ||
+        location == '/forgot-password' ||
+        location == '/reset-password';
 
     if (!isLoggedIn && !isOnAuthScreen) return '/login';
-    if (isLoggedIn && isOnAuthScreen) return '/home';
+    if (isLoggedIn && isOnAuthScreen) {
+      if (location == '/reset-password') return null;
+
+      return '/home';
+    }
     return null;
   },
   refreshListenable: GoRouterRefreshStream(supabase.auth.onAuthStateChange),
@@ -73,11 +81,17 @@ final appRouter = GoRouter(
       path: '/register',
       builder: (context, state) => const RegisterScreen(),
     ),
-
+    GoRoute(
+      path: '/forgot-password',
+      builder: (context, state) => const ForgotPasswordScreen(),
+    ),
+    GoRoute(
+      path: '/reset-password',
+      builder: (context, state) => const ResetPasswordScreen(),
+    ),
     GoRoute(
       path: '/ai-parse',
-      parentNavigatorKey:
-          _rootNavigatorKey, 
+      parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) => const AiParseScreen(recipeId: null),
     ),
 

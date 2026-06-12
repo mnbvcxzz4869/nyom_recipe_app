@@ -17,29 +17,31 @@ class AuthRepository {
     required String email,
     required String password,
     required String username,
-  }) =>
-      _client.auth.signUp(
-        email: email,
-        password: password,
-        data: {'username': username},
-      );
+  }) => _client.auth.signUp(
+    email: email,
+    password: password,
+    data: {'username': username},
+  );
 
   Future<AuthResponse> signIn({
     required String email,
     required String password,
-  }) =>
-      _client.auth.signInWithPassword(email: email, password: password);
+  }) => _client.auth.signInWithPassword(email: email, password: password);
 
   Future<AuthResponse> signInWithGoogle() async {
     final googleUser = await GoogleSignIn.instance.authenticate();
 
     final idToken = googleUser.authentication.idToken;
 
-    final clientAuth = await googleUser.authorizationClient
-        .authorizeScopes(['email', 'profile']);
+    final clientAuth = await googleUser.authorizationClient.authorizeScopes([
+      'email',
+      'profile',
+    ]);
     final accessToken = clientAuth.accessToken;
 
-    if (idToken == null) throw const GoogleAuthException('No ID token received');
+    if (idToken == null) {
+      throw const GoogleAuthException('No ID token received');
+    }
 
     return _client.auth.signInWithIdToken(
       provider: OAuthProvider.google,
@@ -52,6 +54,14 @@ class AuthRepository {
     await GoogleSignIn.instance.signOut();
     await _client.auth.signOut();
   }
+
+  Future<void> sendPasswordResetEmail({
+    required String email,
+  }) => _client.auth.resetPasswordForEmail(
+    email,
+    redirectTo:
+        'io.supabase.nyom://reset-callback/', 
+  );
 
   Session? get currentSession => _client.auth.currentSession;
   User? get currentUser => _client.auth.currentUser;

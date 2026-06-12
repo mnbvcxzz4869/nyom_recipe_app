@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,8 +21,33 @@ void main() async {
   runApp(const ProviderScope(child: NyomApp()));
 }
 
-class NyomApp extends StatelessWidget {
+class NyomApp extends StatefulWidget {
   const NyomApp({super.key});
+
+  @override
+  State<NyomApp> createState() => _NyomAppState();
+}
+
+class _NyomAppState extends State<NyomApp> {
+  late final StreamSubscription<AuthState> _authSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+      _authSubscription = Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      final AuthChangeEvent event = data.event;
+      
+      if (event == AuthChangeEvent.passwordRecovery) {
+        appRouter.go('/reset-password');
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _authSubscription.cancel(); 
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

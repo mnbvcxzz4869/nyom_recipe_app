@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:nyom_recipe_app/core/constants/app_constants.dart'; 
+import 'package:nyom_recipe_app/core/constants/app_constants.dart';
 import 'package:nyom_recipe_app/features/recipes/models/recipe.dart';
 import 'package:nyom_recipe_app/features/recipes/providers/recipe_provider.dart';
 import 'package:nyom_recipe_app/shared/widgets/app_loading_overlay.dart';
@@ -126,6 +126,7 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
                       onPressed: () => ref.invalidate(recipesProvider),
                       child: const Text('Retry'),
                     ),
+                    const SizedBox(height: 120),
                   ],
                 ),
               ),
@@ -156,6 +157,7 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(color: AppTheme.greyAccent),
                         ),
+                        const SizedBox(height: 120),
                       ],
                     ),
                   ),
@@ -184,6 +186,7 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(color: AppTheme.greyAccent),
                         ),
+                        const SizedBox(height: 120),
                       ],
                     ),
                   ),
