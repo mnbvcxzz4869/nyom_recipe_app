@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:nyom_recipe_app/core/constants/app_constants.dart'; // Imported constants
 import 'package:nyom_recipe_app/features/recipes/models/recipe.dart';
 import 'package:nyom_recipe_app/features/recipes/providers/recipe_provider.dart';
+import 'package:nyom_recipe_app/shared/widgets/app_loading_overlay.dart';
 import 'package:nyom_recipe_app/shared/widgets/recipe_card/discovery_recipe_card.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/recipe_search_bar.dart';
@@ -108,10 +109,8 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
 
           // ── BODY: LOADING / ERROR / EMPTY / GRID ────────────────────────
           asyncRecipes.when(
-            loading: () => const SliverFillRemaining(
-              child: Center(child: CircularProgressIndicator()),
-            ),
-
+            loading: () =>
+                const SliverFillRemaining(child: AppLoadingOverlay()),
             error: (err, _) => SliverFillRemaining(
               child: Center(
                 child: Column(

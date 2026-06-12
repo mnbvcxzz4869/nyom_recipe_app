@@ -4,6 +4,7 @@ import 'package:nyom_recipe_app/features/grocery/models/grocery_item.dart';
 import 'package:nyom_recipe_app/features/grocery/providers/grocery_provider.dart';
 import 'package:nyom_recipe_app/features/recipes/models/ingredient_item.dart';
 import 'package:nyom_recipe_app/shared/utils/week_key.dart';
+import 'package:nyom_recipe_app/shared/widgets/app_loading_overlay.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/weekly_calendar_strip.dart';
 import '../widgets/grocery_progress_card.dart';
@@ -63,10 +64,7 @@ class _GroceryListScreenState extends ConsumerState<GroceryListScreen> {
     final currentWeek = ref.watch(currentWeekNumberProvider);
     final asyncItems = ref.watch(groceryProvider);
     return asyncItems.when(
-      loading: () => const Scaffold(
-        backgroundColor: AppTheme.baseBackground,
-        body: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () => const Scaffold(body: AppLoadingOverlay()),
       error: (err, _) => Scaffold(
         backgroundColor: AppTheme.baseBackground,
         body: Center(

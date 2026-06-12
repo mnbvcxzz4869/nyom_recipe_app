@@ -7,6 +7,7 @@ import 'package:nyom_recipe_app/features/planner/widgets/meal_slot_section.dart'
 import 'package:nyom_recipe_app/features/planner/widgets/recipe_picker_sheet.dart';
 import 'package:nyom_recipe_app/features/recipes/models/recipe.dart';
 import 'package:nyom_recipe_app/features/recipes/providers/recipe_provider.dart';
+import 'package:nyom_recipe_app/shared/widgets/app_loading_overlay.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/weekly_calendar_strip.dart';
 import 'package:nyom_recipe_app/core/providers/calendar_provider.dart';
@@ -113,8 +114,16 @@ class _WeeklyPlannerScreenState extends ConsumerState<WeeklyPlannerScreen> {
           slivers: [
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.only(left: 16, right: 16, top: 4, bottom: 16),
-                child: Text('Weekly Planner', style: Theme.of(context).textTheme.headlineLarge),
+                padding: const EdgeInsets.only(
+                  left: 16,
+                  right: 16,
+                  top: 4,
+                  bottom: 16,
+                ),
+                child: Text(
+                  'Weekly Planner',
+                  style: Theme.of(context).textTheme.headlineLarge,
+                ),
               ),
             ),
             SliverToBoxAdapter(
@@ -124,7 +133,8 @@ class _WeeklyPlannerScreenState extends ConsumerState<WeeklyPlannerScreen> {
                   baseDate: baseDate,
                   activeWeekNumber: effectiveWeek,
                   showDayRow: true,
-                  onWeekChanged: (newWeek) => setState(() => _selectedWeekNumber = newWeek),
+                  onWeekChanged: (newWeek) =>
+                      setState(() => _selectedWeekNumber = newWeek),
                   onDateChanged: _onDateChanged,
                   minWeekNumber: (currentWeek - 2).clamp(1, currentWeek),
                   maxWeekNumber: currentWeek + 2,
@@ -132,20 +142,26 @@ class _WeeklyPlannerScreenState extends ConsumerState<WeeklyPlannerScreen> {
               ),
             ),
             asyncPlan.when(
-              loading: () => const SliverFillRemaining(
-                child: Center(child: CircularProgressIndicator()),
-              ),
+              loading: () => const SliverFillRemaining(child: AppLoadingOverlay()),
               error: (err, _) => SliverFillRemaining(
                 child: Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.error_outline, size: 48, color: AppTheme.greyAccent),
+                      const Icon(
+                        Icons.error_outline,
+                        size: 48,
+                        color: AppTheme.greyAccent,
+                      ),
                       const SizedBox(height: 12),
-                      Text('Failed to load meal plan', style: Theme.of(context).textTheme.titleMedium),
+                      Text(
+                        'Failed to load meal plan',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
                       const SizedBox(height: 8),
                       TextButton(
-                        onPressed: () => ref.invalidate(plannerMealPlanProvider),
+                        onPressed: () =>
+                            ref.invalidate(plannerMealPlanProvider),
                         child: const Text('Retry'),
                       ),
                     ],
@@ -153,7 +169,11 @@ class _WeeklyPlannerScreenState extends ConsumerState<WeeklyPlannerScreen> {
                 ),
               ),
               data: (plan) => SliverPadding(
-                padding: const EdgeInsets.only(left: 16, right: 16, bottom: 110),
+                padding: const EdgeInsets.only(
+                  left: 16,
+                  right: 16,
+                  bottom: 110,
+                ),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
                     MealSlotSection(

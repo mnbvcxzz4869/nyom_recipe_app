@@ -16,6 +16,7 @@ import 'package:nyom_recipe_app/features/recipes/widgets/manual_recipe_tab.dart'
 import 'package:nyom_recipe_app/features/recipes/widgets/url_parse_tab.dart';
 import 'package:nyom_recipe_app/core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/widgets/app_loading_overlay.dart';
 
 class AiParseScreen extends ConsumerStatefulWidget {
   final Recipe? initialRecipe;
@@ -325,134 +326,149 @@ class _AiParseScreenState extends ConsumerState<AiParseScreen>
 
   @override
   Widget build(BuildContext context) {
+    final bool isLoading = _isParsingText || _isParsingUrl || _isSaving;
+    final String? loadingLabel = _isParsingText
+        ? 'Parsing recipe…'
+        : _isParsingUrl
+        ? 'Fetching URL…'
+        : _isSaving
+        ? 'Saving recipe…'
+        : null;
+
     return Scaffold(
       backgroundColor: AppTheme.baseBackground,
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: Stack(
           children: [
-            // --- FIXED HEADER ZONE ---
-            // Wrapping headers in a solid Container matching background prevents bleed-through
-            Container(
-              color: AppTheme.baseBackground,
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      top: 0,
-                      bottom: 4,
-                      left: 8,
-                      right: 8,
-                    ),
-                    child: Row(
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-                          onPressed: () => Navigator.pop(context),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // --- FIXED HEADER ZONE ---
+                // Wrapping headers in a solid Container matching background prevents bleed-through
+                Container(
+                  color: AppTheme.baseBackground,
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          top: 0,
+                          bottom: 4,
+                          left: 8,
+                          right: 8,
                         ),
-                        Text(
-                          widget.initialRecipe != null
-                              ? 'Edit Recipe'
-                              : 'Add Recipe',
-                          style: Theme.of(context).textTheme.headlineLarge,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: DottedBorder(
-                      options: RoundedRectDottedBorderOptions(
-                        color: AppTheme.crossedOutGreen,
-                        strokeWidth: 1,
-                        radius: const Radius.circular(8),
-                        dashPattern: const [6, 2],
-                      ),
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: AppTheme.cardWhite,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: TabBar(
-                          controller: _tabController,
-                          indicatorSize: TabBarIndicatorSize.tab,
-                          dividerColor: Colors.transparent,
-                          indicator: BoxDecoration(
-                            color: AppTheme.warmYellow,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          labelColor: AppTheme.headingGreen,
-                          unselectedLabelColor: AppTheme.crossedOutGreen,
-                          labelStyle: Theme.of(context).textTheme.titleSmall
-                              ?.copyWith(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
+                        child: Row(
+                          children: [
+                            IconButton(
+                              icon: const Icon(
+                                Icons.arrow_back_ios_new_rounded,
                               ),
-                          unselectedLabelStyle: Theme.of(context)
-                              .textTheme
-                              .titleSmall
-                              ?.copyWith(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                          tabs: const [
-                            Tab(text: 'AI Parse'),
-                            Tab(text: 'From URL'),
-                            Tab(text: 'Manual'),
+                              onPressed: () => Navigator.pop(context),
+                            ),
+                            Text(
+                              widget.initialRecipe != null
+                                  ? 'Edit Recipe'
+                                  : 'Add Recipe',
+                              style: Theme.of(context).textTheme.headlineLarge,
+                            ),
                           ],
                         ),
                       ),
-                    ),
+                      const SizedBox(height: 8),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: DottedBorder(
+                          options: RoundedRectDottedBorderOptions(
+                            color: AppTheme.crossedOutGreen,
+                            strokeWidth: 1,
+                            radius: const Radius.circular(8),
+                            dashPattern: const [6, 2],
+                          ),
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: AppTheme.cardWhite,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: TabBar(
+                              controller: _tabController,
+                              indicatorSize: TabBarIndicatorSize.tab,
+                              dividerColor: Colors.transparent,
+                              indicator: BoxDecoration(
+                                color: AppTheme.warmYellow,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              labelColor: AppTheme.headingGreen,
+                              unselectedLabelColor: AppTheme.crossedOutGreen,
+                              labelStyle: Theme.of(context).textTheme.titleSmall
+                                  ?.copyWith(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                              unselectedLabelStyle: Theme.of(context)
+                                  .textTheme
+                                  .titleSmall
+                                  ?.copyWith(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                              tabs: const [
+                                Tab(text: 'AI Parse'),
+                                Tab(text: 'From URL'),
+                                Tab(text: 'Manual'),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
+                ),
 
-            // --- END FIXED HEADER ZONE ---
-            const SizedBox(height: 8),
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  // FIXED ORDER: Matches your Tab sequence ('AI Parse', 'From URL', 'Manual')
-                  AiParseTab(
-                    controller: _textInputController,
-                    isParsing: _isParsingText,
-                    errorMessage: _textParseError,
-                    onParse: _handleParseText,
+                // --- END FIXED HEADER ZONE ---
+                const SizedBox(height: 8),
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      UrlParseTab(
+                        controller: _urlInputController,
+                        isParsing: _isParsingUrl,
+                        errorMessage: _urlParseError,
+                        onParse: _handleParseUrl,
+                      ),
+                      AiParseTab(
+                        controller: _textInputController,
+                        isParsing: _isParsingText,
+                        errorMessage: _textParseError,
+                        onParse: _handleParseText,
+                      ),
+                      ManualRecipeTab(
+                        titleController: _manualTitleController,
+                        timeController: _manualTimeController,
+                        selectedCategory: _selectedCategory,
+                        categories: _categories,
+                        ingredients: _ingredients,
+                        steps: _steps,
+                        pickedImage: _pickedImage,
+                        uploadedImageUrl: _uploadedImageUrl,
+                        isSaving: _isSaving,
+                        onPickImage: _handlePickImage,
+                        onAddIngredient: _addIngredient,
+                        onRemoveIngredient: _removeIngredient,
+                        onAddStep: _addStep,
+                        onRemoveStep: _removeStep,
+                        onCategoryChanged: (val) =>
+                            setState(() => _selectedCategory = val),
+                        onSave: _handleSave,
+                      ),
+                    ],
                   ),
-                  UrlParseTab(
-                    controller: _urlInputController,
-                    isParsing: _isParsingUrl,
-                    errorMessage: _urlParseError,
-                    onParse: _handleParseUrl,
-                  ),
-                  ManualRecipeTab(
-                    titleController: _manualTitleController,
-                    timeController: _manualTimeController,
-                    selectedCategory: _selectedCategory,
-                    categories: _categories,
-                    ingredients: _ingredients,
-                    steps: _steps,
-                    pickedImage: _pickedImage,
-                    uploadedImageUrl: _uploadedImageUrl,
-                    isSaving: _isSaving,
-                    onPickImage: _handlePickImage,
-                    onAddIngredient: _addIngredient,
-                    onRemoveIngredient: _removeIngredient,
-                    onAddStep: _addStep,
-                    onRemoveStep: _removeStep,
-                    onCategoryChanged: (val) =>
-                        setState(() => _selectedCategory = val),
-                    onSave: _handleSave,
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
+            if (isLoading) AppLoadingOverlay(label: loadingLabel),
           ],
         ),
       ),

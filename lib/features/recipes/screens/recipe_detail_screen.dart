@@ -1,3 +1,5 @@
+import 'package:nyom_recipe_app/shared/widgets/app_loading_overlay.dart';
+
 import '../../../core/theme/app_theme.dart';
 import '../models/recipe.dart';
 import 'package:flutter/material.dart';
@@ -20,10 +22,7 @@ class RecipeDetailScreen extends ConsumerWidget {
     final asyncRecipe = ref.watch(recipeByIdProvider(recipeId));
 
     return asyncRecipe.when(
-      loading: () => Scaffold(
-        backgroundColor: AppTheme.baseBackground,
-        body: const Center(child: CircularProgressIndicator()),
-      ),
+      loading: () => const Scaffold(body: AppLoadingOverlay()),
       error: (err, _) => Scaffold(
         backgroundColor: AppTheme.baseBackground,
         body: Center(

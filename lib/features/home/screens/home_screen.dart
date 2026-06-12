@@ -19,16 +19,16 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final today = DateTime.now();
-      final todayKey =
-          '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
-      ref.read(selectedDateProvider.notifier).setDate(todayKey);
-    });
-  }
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   WidgetsBinding.instance.addPostFrameCallback((_) {
+  //     final today = DateTime.now();
+  //     final todayKey =
+  //         '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+  //     ref.read(selectedDateProvider.notifier).setDate(todayKey);
+  //   });
+  // }
 
   @override
   Widget build(BuildContext context) {

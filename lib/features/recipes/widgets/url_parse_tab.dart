@@ -35,30 +35,22 @@ class UrlParseTab extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 8),
               child: Text(
                 errorMessage!,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall
-                    ?.copyWith(color: Colors.red),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: Colors.red),
               ),
             ),
-          if (isParsing)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
-              child: Center(child: CircularProgressIndicator()),
-            )
-          else
-            CustomButton(
-              text: 'Parse with AI',
-              type: CustomButtonType.primary,
-              onPressed: onParse,
-            ),
+          CustomButton(
+            text: 'Parse with AI',
+            type: CustomButtonType.primary,
+            onPressed: isParsing ? null : onParse,
+          ),
           const SizedBox(height: 8),
           Text(
             'AI will pre-fill the Manual tab — you can review and edit before saving.',
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall
-                ?.copyWith(color: AppTheme.greyAccent),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: AppTheme.greyAccent),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 40),

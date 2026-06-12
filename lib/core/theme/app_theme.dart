@@ -91,6 +91,12 @@ class AppTheme {
           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
       ),
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: headingGreen,
+        circularTrackColor: warmYellow,
+        strokeWidth: 4,
+        strokeCap: StrokeCap.round,
+      ),
     );
   }
 }

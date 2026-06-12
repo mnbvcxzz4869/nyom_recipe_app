@@ -46,7 +46,11 @@ class ManualRecipeTab extends StatelessWidget {
     required this.onSave,
   });
 
-  Widget _buildDashedAddButton(BuildContext context, String label, VoidCallback onTap) {
+  Widget _buildDashedAddButton(
+    BuildContext context,
+    String label,
+    VoidCallback onTap,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16, top: 0),
       child: DottedBorder(
@@ -68,9 +72,9 @@ class ManualRecipeTab extends StatelessWidget {
                 child: Text(
                   label,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontSize: 16,
-                        color: AppTheme.crossedOutGreen,
-                      ),
+                    fontSize: 16,
+                    color: AppTheme.crossedOutGreen,
+                  ),
                 ),
               ),
             ),
@@ -103,7 +107,10 @@ class ManualRecipeTab extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Estimated Time', style: Theme.of(context).textTheme.titleMedium),
+                    Text(
+                      'Estimated Time',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
                     const SizedBox(height: 8),
                     Material(
                       elevation: 2,
@@ -113,7 +120,11 @@ class ManualRecipeTab extends StatelessWidget {
                         children: [
                           const Padding(
                             padding: EdgeInsets.only(left: 12),
-                            child: Icon(Icons.timer_outlined, size: 20, color: AppTheme.greyAccent),
+                            child: Icon(
+                              Icons.timer_outlined,
+                              size: 20,
+                              color: AppTheme.greyAccent,
+                            ),
                           ),
                           Expanded(
                             child: TextField(
@@ -122,7 +133,9 @@ class ManualRecipeTab extends StatelessWidget {
                               style: Theme.of(context).textTheme.bodyMedium,
                               decoration: InputDecoration(
                                 hintText: '00',
-                                hintStyle: Theme.of(context).textTheme.labelLarge,
+                                hintStyle: Theme.of(
+                                  context,
+                                ).textTheme.labelLarge,
                                 border: InputBorder.none,
                                 focusedBorder: InputBorder.none,
                                 enabledBorder: InputBorder.none,
@@ -137,9 +150,7 @@ class ManualRecipeTab extends StatelessWidget {
                             padding: const EdgeInsets.only(right: 12),
                             child: Text(
                               'Min',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
+                              style: Theme.of(context).textTheme.bodyMedium
                                   ?.copyWith(color: AppTheme.greyAccent),
                             ),
                           ),
@@ -154,18 +165,27 @@ class ManualRecipeTab extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Category', style: Theme.of(context).textTheme.titleMedium),
+                    Text(
+                      'Category',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
                     const SizedBox(height: 8),
                     Material(
                       elevation: 2,
                       borderRadius: BorderRadius.circular(8),
                       color: AppTheme.cardWhite,
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 2,
+                        ),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
                             value: selectedCategory,
-                            hint: Text('Select', style: Theme.of(context).textTheme.labelLarge),
+                            hint: Text(
+                              'Select',
+                              style: Theme.of(context).textTheme.labelLarge,
+                            ),
                             isExpanded: true,
                             icon: const Icon(
                               Icons.keyboard_arrow_down_rounded,
@@ -174,10 +194,17 @@ class ManualRecipeTab extends StatelessWidget {
                             style: Theme.of(context).textTheme.bodyMedium,
                             dropdownColor: AppTheme.cardWhite,
                             items: categories
-                                .map((c) => DropdownMenuItem(
-                                      value: c,
-                                      child: Text(c, style: Theme.of(context).textTheme.bodyMedium),
-                                    ))
+                                .map(
+                                  (c) => DropdownMenuItem(
+                                    value: c,
+                                    child: Text(
+                                      c,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodyMedium,
+                                    ),
+                                  ),
+                                )
                                 .toList(),
                             onChanged: onCategoryChanged,
                           ),
@@ -192,7 +219,10 @@ class ManualRecipeTab extends StatelessWidget {
           const SizedBox(height: 16),
 
           // ── Ingredients ──
-          Text('Ingredients List', style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            'Ingredients List',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           const SizedBox(height: 8),
           Material(
             elevation: 2,
@@ -214,7 +244,11 @@ class ManualRecipeTab extends StatelessWidget {
                       showDivider: i < ingredients.length - 1,
                     ),
                   ),
-                  _buildDashedAddButton(context, 'Add Ingredients', onAddIngredient),
+                  _buildDashedAddButton(
+                    context,
+                    'Add Ingredients',
+                    onAddIngredient,
+                  ),
                 ],
               ),
             ),
@@ -281,41 +315,47 @@ class ManualRecipeTab extends StatelessWidget {
                           child: Image.file(pickedImage!, fit: BoxFit.cover),
                         )
                       : uploadedImageUrl != null
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: CachedNetworkImage(
-                                imageUrl: uploadedImageUrl!,
-                                fit: BoxFit.cover,
-                                width: double.infinity,
-                                height: double.infinity,
-                                placeholder: (context, url) =>
-                                    const Center(child: CircularProgressIndicator()),
-                                errorWidget: (context, url, error) =>
-                                    const Icon(Icons.broken_image, color: AppTheme.greyAccent),
-                              ),
-                            )
-                          : Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.add_photo_alternate_outlined,
-                                    size: 32, color: AppTheme.greyAccent),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Add a photo',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium
-                                      ?.copyWith(fontSize: 16, color: AppTheme.greyAccent),
-                                ),
-                                Text(
-                                  'Tap to upload or take a picture',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
-                                      ?.copyWith(fontSize: 12),
-                                ),
-                              ],
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: CachedNetworkImage(
+                            imageUrl: uploadedImageUrl!,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: double.infinity,
+                            placeholder: (context, url) => const Center(
+                              child: CircularProgressIndicator(),
                             ),
+                            errorWidget: (context, url, error) => const Icon(
+                              Icons.broken_image,
+                              color: AppTheme.greyAccent,
+                            ),
+                          ),
+                        )
+                      : Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.add_photo_alternate_outlined,
+                              size: 32,
+                              color: AppTheme.greyAccent,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Add a photo',
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(
+                                    fontSize: 16,
+                                    color: AppTheme.greyAccent,
+                                  ),
+                            ),
+                            Text(
+                              'Tap to upload or take a picture',
+                              style: Theme.of(
+                                context,
+                              ).textTheme.bodySmall?.copyWith(fontSize: 12),
+                            ),
+                          ],
+                        ),
                 ),
               ),
             ),
@@ -323,14 +363,11 @@ class ManualRecipeTab extends StatelessWidget {
           const SizedBox(height: 16),
 
           // ── Save ──
-          if (isSaving)
-            const Center(child: CircularProgressIndicator())
-          else
-            CustomButton(
-              text: 'Save Recipe',
-              type: CustomButtonType.primary,
-              onPressed: onSave,
-            ),
+          CustomButton(
+            text: 'Save Recipe',
+            type: CustomButtonType.primary,
+            onPressed: isSaving ? null : onSave,
+          ),
           const SizedBox(height: 60),
         ],
       ),
