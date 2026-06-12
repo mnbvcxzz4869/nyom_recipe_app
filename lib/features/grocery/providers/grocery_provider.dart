@@ -6,7 +6,6 @@ import 'package:nyom_recipe_app/shared/utils/week_key.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/grocery_item.dart';
 import '../repositories/grocery_repository.dart';
-import '../../auth/providers/auth_provider.dart';
 
 final groceryRepositoryProvider = Provider(
   (ref) => GroceryRepository(Supabase.instance.client),

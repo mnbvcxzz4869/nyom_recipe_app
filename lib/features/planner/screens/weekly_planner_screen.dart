@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:nyom_recipe_app/features/auth/providers/auth_provider.dart';
 import 'package:nyom_recipe_app/features/planner/providers/planner_provider.dart';
 import 'package:nyom_recipe_app/features/planner/widgets/meal_slot_section.dart';
 import 'package:nyom_recipe_app/features/planner/widgets/recipe_picker_sheet.dart';
