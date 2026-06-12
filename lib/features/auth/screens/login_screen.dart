@@ -31,7 +31,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           .read(authRepositoryProvider)
           .signIn(
             email: _emailController.text.trim(),
-            password: _passwordController.text.trim(),
+            password: _passwordController.text,
           );
     } catch (e) {
       if (mounted) {

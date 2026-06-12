@@ -46,7 +46,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           .read(authRepositoryProvider)
           .signUp(
             email: _emailController.text.trim(),
-            password: _passwordController.text.trim(),
+            password: _passwordController.text,
             username: _usernameController.text.trim(),
           );
     } catch (e) {

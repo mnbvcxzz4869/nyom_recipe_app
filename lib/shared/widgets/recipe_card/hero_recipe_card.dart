@@ -8,12 +8,7 @@ class HeroRecipeCard extends StatelessWidget {
   final VoidCallback? onTap;
   final String? slotLabel;
 
-  const HeroRecipeCard({
-    super.key,
-    this.recipe,
-    this.onTap,
-    this.slotLabel,
-  });
+  const HeroRecipeCard({super.key, this.recipe, this.onTap, this.slotLabel});
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +29,7 @@ class HeroRecipeCard extends StatelessWidget {
           child: Row(
             children: [
               Material(
-                elevation: 1, 
+                elevation: 1,
                 borderRadius: BorderRadius.circular(8),
                 clipBehavior: Clip.antiAlias,
                 child: SizedBox(
@@ -79,7 +74,7 @@ class HeroRecipeCard extends StatelessWidget {
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       if (slotLabel != null) ...[
                         Text(
@@ -92,14 +87,18 @@ class HeroRecipeCard extends StatelessWidget {
                         ),
                       ],
                       const SizedBox(height: 4),
-                      Text(
-                        recipe.title,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontSize: 20,
-                          height: 1.2,
+                      SizedBox(
+                        height: 48,
+                        child: Align(
+                          alignment: Alignment.topLeft,
+                          child: Text(
+                            recipe.title,
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontSize: 20, height: 1.2),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
                       ),
                       Row(
                         children: [
@@ -108,7 +107,7 @@ class HeroRecipeCard extends StatelessWidget {
                             size: 16,
                             color: AppTheme.greyAccent,
                           ),
-                          SizedBox(width: 2,),
+                          SizedBox(width: 2),
                           Text(
                             '${recipe.durationMinutes.toString()} Mins',
                             style: Theme.of(

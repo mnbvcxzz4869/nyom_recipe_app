@@ -9,6 +9,7 @@ class MealSlotSection extends StatelessWidget {
   final String label;
   final List<Recipe> recipes;
   final Set<String> dismissed;
+  final Map<String, int> retryNonce;
   final VoidCallback onAdd;
   final void Function(String recipeId) onDismiss;
 
@@ -17,6 +18,7 @@ class MealSlotSection extends StatelessWidget {
     required this.label,
     required this.recipes,
     required this.dismissed,
+    this.retryNonce = const {},
     required this.onAdd,
     required this.onDismiss,
   });
@@ -54,7 +56,9 @@ class MealSlotSection extends StatelessWidget {
               return Padding(
                 padding: const EdgeInsets.only(bottom: 8.0),
                 child: Dismissible(
-                  key: ValueKey('${label}_${recipe.id}'),
+                  key: ValueKey(
+                    '${label}_${recipe.id}_${retryNonce['${label.toLowerCase()}_${recipe.id}'] ?? 0}',
+                  ),
                   direction: DismissDirection.endToStart,
                   onDismissed: (_) => onDismiss(recipe.id),
                   background: Container(
@@ -64,7 +68,10 @@ class MealSlotSection extends StatelessWidget {
                       color: AppTheme.greyAccent.withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(Icons.delete_outline, color: AppTheme.greyAccent),
+                    child: Icon(
+                      Icons.delete_outline,
+                      color: AppTheme.greyAccent,
+                    ),
                   ),
                   child: MealPlannerRecipeCard(
                     recipe: recipe,
