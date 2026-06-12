@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nyom_recipe_app/features/recipes/repositories/recipe_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/recipe.dart';
+import '../../auth/providers/auth_provider.dart';
 
 final recipeRepositoryProvider = Provider(
   (ref) => RecipeRepository(Supabase.instance.client),
@@ -24,6 +25,9 @@ final recipeByIdProvider = FutureProvider.family<Recipe, String>((
 class RecipeNotifier extends AsyncNotifier<List<Recipe>> {
   @override
   Future<List<Recipe>> build() async {
+    final userId = ref.watch(currentUserIdProvider);
+    if (userId == null) return [];
+
     final channel = Supabase.instance.client
         .channel('recipes_changes')
         .onPostgresChanges(

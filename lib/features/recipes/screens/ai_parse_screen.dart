@@ -20,7 +20,8 @@ import '../../../shared/widgets/app_loading_overlay.dart';
 
 class AiParseScreen extends ConsumerStatefulWidget {
   final Recipe? initialRecipe;
-  const AiParseScreen({super.key, this.initialRecipe, required recipeId});
+  final String? recipeId;
+  const AiParseScreen({super.key, this.initialRecipe, required this.recipeId});
 
   @override
   ConsumerState<AiParseScreen> createState() => _AiParseScreenState();
@@ -57,8 +58,8 @@ class _AiParseScreenState extends ConsumerState<AiParseScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _editingId = widget.recipeId;
     if (widget.initialRecipe != null) {
-      _editingId = widget.initialRecipe!.id;
       WidgetsBinding.instance.addPostFrameCallback(
         (_) => _prefillManualTab(widget.initialRecipe!),
       );
@@ -409,8 +410,8 @@ class _AiParseScreenState extends ConsumerState<AiParseScreen>
                                     fontWeight: FontWeight.w500,
                                   ),
                               tabs: const [
-                                Tab(text: 'AI Parse'),
                                 Tab(text: 'From URL'),
+                                Tab(text: 'AI Parse'),
                                 Tab(text: 'Manual'),
                               ],
                             ),

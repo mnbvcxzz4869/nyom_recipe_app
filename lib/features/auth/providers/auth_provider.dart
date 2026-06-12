@@ -34,3 +34,8 @@ final userCreatedAtProvider = FutureProvider<DateTime>((ref) async {
   final now = DateTime.now();
   return now.subtract(Duration(days: now.weekday - 1));
 });
+
+final currentUserIdProvider = Provider<String?>((ref) {
+  final authState = ref.watch(authStateProvider);
+  return authState.value?.session?.user.id;
+});

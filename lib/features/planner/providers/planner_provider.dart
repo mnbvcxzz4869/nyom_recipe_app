@@ -6,6 +6,7 @@ import '../models/meal_plan.dart';
 import '../repositories/planner_repository.dart';
 import '../../grocery/providers/grocery_provider.dart';
 import '../../recipes/providers/recipe_provider.dart';
+import '../../auth/providers/auth_provider.dart';
 import '../../../shared/utils/week_key.dart';
 
 final plannerRepositoryProvider = Provider(
@@ -33,6 +34,7 @@ final plannerSelectedDateProvider =
     );
 
 final todayMealPlanProvider = FutureProvider<MealPlan>((ref) {
+  ref.watch(currentUserIdProvider);
   return ref.read(plannerRepositoryProvider).fetchByDate(_todayKey());
 });
 
@@ -43,6 +45,7 @@ final mealPlanProvider = AsyncNotifierProvider<MealPlanNotifier, MealPlan>(
 class MealPlanNotifier extends AsyncNotifier<MealPlan> {
   @override
   Future<MealPlan> build() {
+    ref.watch(currentUserIdProvider);
     final dateKey = ref.watch(selectedDateProvider);
     return ref.read(plannerRepositoryProvider).fetchByDate(dateKey);
   }
@@ -93,6 +96,7 @@ final plannerMealPlanProvider =
 class PlannerMealPlanNotifier extends AsyncNotifier<MealPlan> {
   @override
   Future<MealPlan> build() {
+    ref.watch(currentUserIdProvider);
     final dateKey = ref.watch(plannerSelectedDateProvider);
     return ref.read(plannerRepositoryProvider).fetchByDate(dateKey);
   }
