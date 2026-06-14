@@ -27,7 +27,7 @@ Nyom is a personal recipe collection app that makes it stupid-easy to save, orga
 
 | Home | Home Scrolled | Recipe Collection |
 |------|---------------|-------------------|
-| <img src="screenshots/home.png" width="200"/> | <img src="screenshots/home-scrolled.png" width="200"/> | <img src="screenshots/recipes.png" width="200"/> |
+| <img src="screenshots/home.png" width="250"/> | <img src="screenshots/home-scrolled.png" width="250"/> | <img src="screenshots/recipes.png" width="250"/> |
 
 | Add Recipes - URL | Add Recipes - Text | Add Recipes - Manual |
 |-------------------|--------------------|----------------------|
