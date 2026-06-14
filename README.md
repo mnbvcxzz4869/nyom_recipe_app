@@ -27,15 +27,15 @@ Nyom is a personal recipe collection app that makes it stupid-easy to save, orga
 
 | Home | Home Scrolled | Recipe Collection |
 |------|---------------|-------------------|
-| <img src="screenshots/home.png" width="250"/> | <img src="screenshots/home-scrolled.png" width="250"/> | <img src="screenshots/recipes.png" width="250"/> |
+| <img src="screenshots/home.png" width="225"/> | <img src="screenshots/home-scrolled.png" width="225"/> | <img src="screenshots/recipes.png" width="225"/> |
 
 | Add Recipes - URL | Add Recipes - Text | Add Recipes - Manual |
 |-------------------|--------------------|----------------------|
-| <img src="screenshots/addrecipes-fromurl.png" width="200"/> | <img src="screenshots/addrecipes-text.png" width="200"/> | <img src="screenshots/addrecipes-manual.png" width="200"/> |
+| <img src="screenshots/addrecipes-fromurl.png" width="225"/> | <img src="screenshots/addrecipes-text.png" width="225"/> | <img src="screenshots/addrecipes-manual.png" width="225"/> |
 
 | Recipe Detail | Meal Planner | Grocery List |
 |---------------|--------------|--------------|
-| <img src="screenshots/recipe-view.png" width="200"/> | <img src="screenshots/planner.png" width="200"/> | <img src="screenshots/grocerylist.png" width="200"/> |
+| <img src="screenshots/recipe-view.png" width="225"/> | <img src="screenshots/planner.png" width="225"/> | <img src="screenshots/grocerylist.png" width="225"/> |
 
 ## ✨ Features
 
